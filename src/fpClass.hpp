@@ -175,7 +175,9 @@ struct StateSpace {
   boost1I_ptr  h_fert_;
   boost1I_ptr  h_age15to49_;
   boost1I_ptr  h_age15plus_;
-  const int pAG_FERT, hAG_FERT, pAG_1549, hAG_1549, pAG_15plus, hAG_15plus;
+  const int 
+    pAG_FERT_l, hAG_FERT_l, pAG_1549_l, hAG_1549_l, pAG_15plus_l, hAG_15plus_l,
+    pAG_FERT_u, hAG_FERT_u, pAG_1549_u, hAG_1549_u, pAG_15plus_u, hAG_15plus_u;
   // 
   StateSpace(const SEXP& fp);
   int art_dim() {return hTS * hDS * hAG * NG;};

@@ -103,8 +103,8 @@ public: // Pop inits
     at_this            (REAL(O.pop)),
     N                  (s.NG * s.pAG * s.pDS),
     xtents             ({{s.pDS, s.NG, s.pAG}}),
-    birth_age          (s.pAG_FERT),
-    birth_agrp         (s.hAG_FERT),
+    birth_age          (s.pAG_FERT_u),
+    birth_agrp         (s.hAG_FERT_u),
     prev15to49         (REAL(O.prev15to49), extents[s.PROJ_YEARS]),
     incid15to49        (REAL(O.incid15to49), extents[s.PROJ_YEARS]),
     entrantprev        (REAL(O.entrantprev), extents[s.PROJ_YEARS]),
@@ -160,6 +160,7 @@ public: // Pop inits
   void cal_prev_pregant (const hivC& hivpop, const artC& artpop, Views& v, 
                          const Parameters& p, const StateSpace& s);
   void save_prev_n_inc (Views& v, const StateSpace& s);
+  double get_art_ii(int time_step, const Views& v, const StateSpace& s);
   void infect_mix (int ii, Views& v, const Parameters& p, const StateSpace& s);
   void infect_spec (const hivC& hivpop, const artC& artpop, int time_step,
                     Views& v, const Parameters& p, const StateSpace& s);
@@ -233,7 +234,9 @@ public: // inits
   N              (s.NG * s.hAG * s.hDS),
   xtents         ({{s.NG, s.hAG, s.hDS}}),
   at_this        (hiv_sexp),
-  data_db        (extents[s.PROJ_YEARS][s.NG][s.hAG][s.hDS]), // later return this as well
+  data_db        (extents[s.PROJ_YEARS][s.NG][s.hAG][s.hDS]),
+  at_this_db     (data_db.data()),
+  at_prev_db     (data_db.data()),
   grad           (xtents),
   grad_db        (xtents),
   data_all       (xtents),
@@ -264,6 +267,8 @@ public: // fields
   double    * at_this;
   double    * at_prev;
   boost4D     data_db; // debut only population
+  double    * at_this_db;
+  double    * at_prev_db;
   boost3D     grad;
   boost3D     grad_db;
   boost3D     data_all; // all populations in the year requested
@@ -279,7 +284,7 @@ public: // Inits
   artC(double * artpop_sexp, const StateSpace& s) :
     N(s.NG * s.hAG * s.hDS * s.hTS),
     xtents({{s.NG, s.hAG, s.hDS, s.hTS}}),
-    at_this(artpop_sexp),
+    at_this   (artpop_sexp),
     data_db   (extents[s.PROJ_YEARS][s.NG][s.hAG][s.hDS][s.hTS]),
     at_this_db(data_db.data()),
     at_prev_db(data_db.data()),

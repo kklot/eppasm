@@ -14,82 +14,94 @@
 // with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "Classes.hpp"
 
-void popC::infect_spec (const hivC& hivpop, const artC& artpop, int time_step,
-                        Views& v, const Parameters& p, const StateSpace& s) {
-  int ts = (s.year-1)/ s.DT + time_step,
-      p_lo = s.p_age15to49_[0] - 1, h_lo = s.h_age15to49_[0] - 1;
+double popC::get_art_ii (int time_step, const Views& v, const StateSpace& s) {
   double dt_ii = 1 - s.DT * time_step, // transition of population in 1 year
-         n_neg_mf = 0, n_pos_mf = 0, 
-         n_pos_lo = 0, n_pos_up = 0, n_neg_lo = 0, n_neg_up = 0,
          n_hiv_lo = 0, n_art_lo = 0, n_hiv_up = 0, n_art_up = 0, art_ii = 0;
-  // boost3D_ptr now(at_this, xtents);
-  update_active_pop_to(s.year, v, s); // substract virgin when needed
-  for (int sex = 0; sex < s.NG; sex++) {
-    for (int age = p_lo; age < s.pAG_1549; age++) {
-      n_neg_mf += data_active[s.N][sex][age];
-      n_pos_mf += data_active[s.P][sex][age];
-    }
-    n_neg_lo += data_active[s.N][sex][p_lo];
-    n_neg_up += data_active[s.N][sex][s.pAG_1549];
-    n_pos_lo += data_active[s.P][sex][p_lo];
-    n_pos_up += data_active[s.P][sex][s.pAG_1549];
-    for (int agr = h_lo; agr < s.hAG_1549; agr++)
-      for (int cd4 = 0; cd4 < s.hDS; cd4++)
-        for (int dur = 0; dur < s.hTS; dur++) {
-          art_ii   += v.now_art[sex][agr][cd4][dur];
-          n_art_lo += v.now_art[sex][h_lo][cd4][dur];
-          n_art_up += v.now_art[sex][s.hAG_1549][cd4][dur];
-        }
-    for (int cd4 = 0; cd4 < s.hDS; cd4++) {
-      n_hiv_lo += v.now_hiv[sex][h_lo][cd4];
-      n_hiv_up += v.now_hiv[sex][s.hAG_1549][cd4];
-    }
-  }
-  double hivn_ii = n_neg_mf - n_neg_lo * dt_ii + n_neg_up * dt_ii;
-  double hivp_ii = n_pos_mf - n_pos_lo * dt_ii + n_pos_up * dt_ii;
+  int agr_size = s.hDS * s.hTS,
+      start    = s.hAG_1549_l * agr_size, 
+      end      = s.hAG_1549_u * agr_size, 
+      offset   = s.hAG * agr_size;
+  
+  for (int i  = start; i < end; i++)
+    art_ii   += *(v.now_art.data() + i) + *(v.now_art.data() + i + offset);
+
+  for (int i  = start; i < start + agr_size; i++)
+    n_art_lo += *(v.now_art.data() + i) + *(v.now_art.data() + i + offset);
+
+  for (int i  = end; i < end + agr_size; i++)
+    n_art_up += *(v.now_art.data() + i) + *(v.now_art.data() + i + offset);
+
+  offset      = s.hAG * s.hDS;
+  for (int i  = s.hAG_1549_l * s.hDS; i < s.hAG_1549_l * s.hDS + s.hDS; i++)
+    n_hiv_lo += *(v.now_hiv.data() + i) + *(v.now_hiv.data() + i + offset);
+  
   if ( n_hiv_lo + n_art_lo > 0) {
     for (int sex = 0; sex < s.NG; sex++) {
       double art_trans = 0, hiv_trans = 0;
-      for (int cd4 = 0; cd4 < s.hDS; cd4++) {
-        for (int dur = 0; dur < s.hTS; dur++)
-          art_trans += v.now_art[sex][h_lo][cd4][dur];
-        hiv_trans += v.now_hiv[sex][h_lo][cd4];
-      }
-      art_ii -= ( data_active[s.P][sex][p_lo] * 
+      for (int i  = 0; i < s.hDS; i++)
+        hiv_trans += *(v.now_hiv.data() + i + sex*offset + s.hAG_1549_l*s.hDS);
+      for (int i  = 0; i < agr_size; i++)
+        art_trans += *(v.now_art.data() + i + sex*offset*s.hTS + s.hAG_1549_l*agr_size);
+      art_ii -= ( data_active[s.P][sex][s.pAG_1549_l] * 
                   art_trans / (hiv_trans + art_trans) ) * dt_ii;
     }
   }
   if ( n_hiv_up + n_art_up > 0) {
     for (int sex = 0; sex < s.NG; sex++) {
       double art_trans = 0, hiv_trans = 0;
-      for (int cd4 = 0; cd4 < s.hDS; cd4++) {
-        for (int dur = 0; dur < s.hTS; dur++)
-          art_trans += v.now_art[sex][s.hAG_1549][cd4][dur];
-        hiv_trans += v.now_hiv[sex][s.hAG_1549][cd4];
-      }
-      art_ii += ( data_active[s.P][sex][s.pAG_1549] * 
+      for (int i  = 0; i < s.hDS; i++)
+        hiv_trans += *(v.now_hiv.data() + i + sex*offset + s.hAG_1549_u*s.hDS);
+      for (int i  = 0; i < agr_size; i++)
+        art_trans += *(v.now_art.data() + i + sex*offset*s.hTS + s.hAG_1549_u*agr_size);
+      art_ii += ( data_active[s.P][sex][s.pAG_1549_u] * 
                   art_trans / (hiv_trans + art_trans) ) * dt_ii;
     }
   }
-  double
-  transm_prev = (hivp_ii - art_ii * (1 - p.ic.relinfectART)) / (hivn_ii + hivp_ii);
+  return art_ii;
+}
+
+void popC::infect_spec (const hivC& hivpop, const artC& artpop, int time_step,
+                        Views& v, const Parameters& p, const StateSpace& s) {
+  int ts = (s.year-1)/ s.DT + time_step;
+  double dt_ii = 1 - s.DT * time_step, // transition of population in 1 year
+         n_neg_mf = 0, n_pos_mf = 0, 
+         n_pos_lo = 0, n_pos_up = 0, n_neg_lo = 0, n_neg_up = 0;
+
+  update_active_pop_to(s.year, v, s); // substract virgin when needed
+  for (int sex = 0; sex < s.NG; sex++) {
+    for (int age = s.pAG_1549_l; age < s.pAG_1549_u; age++) {
+      n_neg_mf += data_active[s.N][sex][age];
+      n_pos_mf += data_active[s.P][sex][age];
+    }
+    n_neg_lo += data_active[s.N][sex][s.pAG_1549_l];
+    n_neg_up += data_active[s.N][sex][s.pAG_1549_u];
+    n_pos_lo += data_active[s.P][sex][s.pAG_1549_l];
+    n_pos_up += data_active[s.P][sex][s.pAG_1549_u];
+  }
+  double hivn_ii = n_neg_mf - n_neg_lo * dt_ii + n_neg_up * dt_ii;
+  double hivp_ii = n_pos_mf - n_pos_lo * dt_ii + n_pos_up * dt_ii;
+
+  double art_ii = get_art_ii(time_step, v, s);
+  double transm_prev =
+    (hivp_ii - art_ii * (1 - p.ic.relinfectART)) / (hivn_ii + hivp_ii);
   double w = (p.ic.proj_steps[ts] == p.ic.tsEpidemicStart) ? p.ic.iota : 0.0;
   double inc_rate = rvec[ts] * transm_prev + w;
 
   // Incidence: male = negative / female negative * sexratio + male negative; 
   //          female = male * sexratio
   double n_neg_m = 0, n_neg_f = 0;
-  for (int age = p_lo; age < s.pAG_1549; age++) {
-    n_neg_m += data_active[s.N][s.M][age];
-    n_neg_f += data_active[s.N][s.F][age];
+  for (int i = s.pAG_1549_l; i < s.pAG_1549_u; i++) {
+    n_neg_m += *(data_active.data() + i);
+    n_neg_f += *(data_active.data() + i+s.pAG);
   }
-  double adj_sex = (n_neg_m + n_neg_f) / (n_neg_m + n_neg_f * p.ic.incrr_sex[s.year]);
-  double sex_inc[2] = {inc_rate * adj_sex, 
-                       inc_rate * adj_sex * p.ic.incrr_sex[s.year]};
+  double adj_sex =
+    (n_neg_m + n_neg_f) / (n_neg_m + n_neg_f * p.ic.incrr_sex[s.year]);
+  double sex_inc[2] =
+    {inc_rate * adj_sex, inc_rate * adj_sex * p.ic.incrr_sex[s.year]};
   // New infections distributed by age: ratio age_i/ 25-29 age
   for (int sex = 0; sex < s.NG; sex++) {
     double n_neg = 0, n_neg_rr = 0, adj_age;
-    for (int age = p_lo; age < s.pAG_1549; age++) {
+    for (int age = s.pAG_1549_l; age < s.pAG_1549_u; age++) {
       n_neg += data_active[s.N][sex][age]; 
       n_neg_rr += p.ic.incrr_age[s.year][sex][age] * data_active[s.N][sex][age];
     }
@@ -149,11 +161,11 @@ void popC::epp_disease_model_direct(hivC& hivpop, artC& artpop, Views& v,
                                     const Parameters& p, const StateSpace& s) {
   int a_l, a_r;
   if (p.ic.incidpopage) { // incidence for 15+ population
-    a_l = s.p_age15plus_[0] - 1;
-    a_r = s.pAG_15plus;
+    a_l = s.pAG_15plus_l;
+    a_r = s.pAG_15plus_u;
   } else { // incidence for 15 -49 population
-    a_l = s.p_age15to49_[0] - 1;
-    a_r = s.pAG_1549;
+    a_l = s.pAG_1549_l;
+    a_r = s.pAG_1549_u;
   }
   update_active_last_year(v, s);
   double n_m = 0, n_f = 0;
@@ -193,6 +205,6 @@ void popC::epp_disease_model_direct(hivC& hivpop, artC& artpop, Views& v,
         v.now_hiv[sex][agr][cd4] +=
           p.nh.cd4_initdist[sex][agr][cd4] * infect_agrp[sex][agr];
   for (int sex = 0; sex < s.NG; sex++)
-    for (int age = s.p_age15to49_[0] - 1; age < s.pAG_1549; age++)
+    for (int age = s.p_age15to49_[0] - 1; age < s.pAG_1549_u; age++)
       incid15to49[s.year] += infections[s.year][sex][age];
 }

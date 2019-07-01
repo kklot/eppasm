@@ -1,19 +1,28 @@
 #include "Classes.hpp"
 
 void artC::aging(const boost2D& ag_prob, Views& v, const StateSpace& s) {
-  for (int i = 0; i < N; i++) {
-    *(at_this + i) = *(at_prev + i);
+  std::memcpy(at_this, at_prev, N*sizeof(double));
     if (s.MODEL == 2)
-      *(at_this_db + i) = *(at_prev_db + i);
-  }
+      std::memcpy(at_this_db, at_prev_db, N*sizeof(double));
   double nARTup;
+  int agr_size = s.hDS * s.hTS;
+  int k = 0, offset = N / s.NG,  offset_k = s.hAG;
+  for (int i = 0; i < agr_size * (s.hAG-1); i += agr_size) {
+    for (int j = 0; j < agr_size; j++) {
+      nARTup = *(at_prev + i+j) * *(ag_prob.data() + k);
+      *(at_this + i+j)          -= nARTup;
+      *(at_this + i+j+agr_size) += nARTup;
+      nARTup = *(at_prev + offset+i+j) * *(ag_prob.data() + k + offset_k);
+      *(at_this + offset+i+j)          -= nARTup;
+      *(at_this + offset+i+j+agr_size) += nARTup;
+    }
+    ++k;
+  }
+
   for (int sex = 0; sex < s.NG; sex++)
     for (int agr = 0; agr < s.hAG-1; agr++)
       for (int cd4 = 0; cd4 < s.hDS; cd4++)
         for (int dur = 0; dur < s.hTS; dur++) {
-          nARTup = v.pre_art[sex][agr][cd4][dur] * ag_prob[sex][agr];
-          v.now_art[sex][agr][cd4][dur]   -= nARTup;
-          v.now_art[sex][agr+1][cd4][dur] += nARTup;
           if (s.MODEL == 2 && agr < s.hDB - 1) {
             nARTup = data_db[s.year-1][sex][agr][cd4][dur] * ag_prob[sex][agr];
             data_db[s.year][sex][agr][cd4][dur]   -= nARTup;
@@ -48,129 +57,124 @@ void artC::sexual_debut(Views& v, const Parameters& p, const StateSpace& s) {
 }
 
 void artC::deaths(const boost2D& survival_pr, Views& v, const StateSpace& s) {
-  for (int sex = 0; sex < s.NG; sex++)
-    for (int agr = 0; agr < s.hAG; agr++)
-      for (int cd4 = 0; cd4 < s.hDS; cd4++)
-        for (int dur = 0; dur < s.hTS; dur++) {
-          v.now_art[sex][agr][cd4][dur] *= survival_pr[sex][agr];
-          if (s.MODEL == 2 && agr < s.hDB)
-            data_db[s.year][sex][agr][cd4][dur] *= survival_pr[sex][agr];
-        }
+  const double * at_sx = survival_pr.data(); int agr = 0;
+  for (int i = 0; i < N; i += s.hTS * s.hDS) {
+    for (int j = 0; j < s.hTS * s.hDS; j++) {
+      *(at_this + i+j) *= *(at_sx + agr);
+      if (s.MODEL == 2)
+        *(at_this_db + i+j) *= *(at_sx + agr);
+    }
+    ++agr;
+  }
 }
 
 void artC::migration(const boost2D& migration_pr, Views& v, const StateSpace& s) {
-  for (int sex = 0; sex < s.NG; sex++)
-    for (int agr = 0; agr < s.hAG; agr++)
-      for (int cd4 = 0; cd4 < s.hDS; cd4++)
-        for (int dur = 0; dur < s.hTS; dur++) {
-          v.now_art[sex][agr][cd4][dur] *= migration_pr[sex][agr];
-          if (s.MODEL == 2 && agr < s.hDB)
-            data_db[s.year][sex][agr][cd4][dur] *= migration_pr[sex][agr];
-        }
+  const double * at_mr = migration_pr.data(); int agr = 0;
+  for (int i = 0; i < N; i += s.hTS * s.hDS) {
+    for (int j = 0; j < s.hTS * s.hDS; j++) {
+      *(at_this + i+j) *= *(at_mr + agr);
+      if (s.MODEL == 2)
+        *(at_this_db + i+j) *= *(at_mr + agr);
+    }
+    ++agr;
+  }
 }
 
 void artC::grad_progress(Views& v, const StateSpace& s) {
-  // int itemsPerCacheLine = cache_line_size() / sizeof(double);
-  zeroing(gradART); // reset gradient
-  if (s.MODEL == 2)
-    zeroing(gradART_db); // reset gradient
+  for (int i = 0; i < N; i++) {
+    *(gradART.data() + i) = 0; // reset gradient
+    *(gradART.data() + i) -= *(death_.data() + i);
+    if (s.MODEL == 2) {
+      *(gradART_db.data() + i) = 0; // reset gradient
+      *(gradART_db.data() + i) -= *(death_db_.data() + i);
+    }
+  }
   double art_up;
-  for (int sex = 0; sex < s.NG; sex++)
-    for (int agr = 0; agr < s.hAG; agr++)
-      for (int cd4 = 0; cd4 < s.hDS; cd4++) {
-        for (int dur = 0; dur < s.hTS - 1; dur++) { // 2 x 9 x 7 x 2
-          art_up = 2.0 * v.now_art[sex][agr][cd4][dur];
-          gradART[sex][agr][cd4][dur]   -= (art_up + death_[sex][agr][cd4][dur]);
-          gradART[sex][agr][cd4][dur+1] += art_up;
-          if (s.MODEL == 2 && agr < s.hDB) {
-            art_up = 2.0 * data_db[s.year][sex][agr][cd4][dur];
-            gradART_db[sex][agr][cd4][dur] -=
-              (art_up + death_db_[sex][agr][cd4][dur]);
-            gradART_db[sex][agr][cd4][dur+1] += art_up;
-          }
-        }
-        gradART[sex][agr][cd4][s.hTS-1] -= death_[sex][agr][cd4][s.hTS-1];
-        if (s.MODEL == 2 && agr < s.hDB)
-          gradART_db[sex][agr][cd4][s.hTS-1] -= death_db_[sex][agr][cd4][s.hTS-1];
+  for (int i = 0; i < N; i += s.hTS) {
+    for (int j = 0; j < s.hTS - 1; j++) {
+      art_up = 2. * *(at_this +i+j);
+      *(gradART.data() + i+j)   -= art_up;
+      *(gradART.data() + i+j+1) += art_up;
+      if (s.MODEL == 2) {
+        art_up = 2. * *(at_this_db +i+j);
+        *(gradART_db.data() + i+j)   -= art_up;
+        *(gradART_db.data() + i+j+1) += art_up;
       }
+    }
+  }
 }
 
 void artC::art_dropout(hivC& hivpop, Views& v,
                        const Parameters& p,
                        const StateSpace& s) {
-  double n_dropout, p_dropout = p.ad.art_dropout[s.year];
-  for (int sex = 0; sex < s.NG; sex++)
-    for (int agr = 0; agr < s.hAG; agr++)
-      for (int cd4 = 0; cd4 < s.hDS; cd4++)
-        for (int dur = 0; dur < s.hTS; dur++) {
-          n_dropout = v.now_art[sex][agr][cd4][dur] * p_dropout;
-          hivpop.grad[sex][agr][cd4]  += n_dropout;
-          gradART[sex][agr][cd4][dur] -= n_dropout;
-          if (s.MODEL == 2 && agr < s.hDB) {
-            n_dropout = data_db[s.year][sex][agr][cd4][dur] * p_dropout;
-            hivpop.grad_db[sex][agr][cd4]  += n_dropout;
-            gradART_db[sex][agr][cd4][dur] -= n_dropout;
-          }
-        }
+  double n_dropout, p_dropout = p.ad.art_dropout[s.year]; int k = 0;
+  for (int i = 0; i < N; i += s.hTS) {
+    for (int j = 0; j < s.hTS; j++) {
+      n_dropout = *(at_this + i+j)  * p_dropout;
+      *(hivpop.grad.data()  +   k) += n_dropout;
+      *(gradART.data() + i+j)      -= n_dropout;
+      if (s.MODEL == 2) {
+        n_dropout = *(at_this_db + i+j) * p_dropout;
+        *(hivpop.grad_db.data()  +   k) += n_dropout;
+        *(gradART_db.data()      + i+j) -= n_dropout;        
+      }
+    }
+    ++k;
+  }
 }
 
 void artC::update_current_on_art(Views& v, const StateSpace& s) {
-  for (int sex = 0; sex < s.NG; sex++) {
-    art_by_sex_[sex] = .0; // reset when call
-    for (int agr = 0; agr < s.hAG; agr++)
-      for (int cd4 = 0; cd4 < s.hDS; cd4++)
-        for (int dur = 0; dur < s.hTS; dur++) {
-          art_by_sex_[sex] += (v.now_art[sex][agr][cd4][dur] + 
-                               gradART[sex][agr][cd4][dur] * s.DT);
-          if (s.MODEL == 2 && agr < s.hDB)  // add art from virgin pop
-            art_by_sex_[sex] += (data_db[s.year][sex][agr][cd4][dur] + 
-                                 gradART_db[sex][agr][cd4][dur] * s.DT);          
-        }
+  art_by_sex_.assign(s.NG, .0); int sex = 0; // reset when call
+  for (int i = 0; i < N; i += N/2) {
+    for (int j = 0; j < N/2; j++) {
+      art_by_sex_[sex] += *(at_this +i+j) + *(gradART.data() + i+j) * s.DT;
+      if (s.MODEL == 2)
+        art_by_sex_[sex] += *(at_this_db +i+j) + *(gradART_db.data() + i+j) * s.DT;
+    }
+    ++sex;
   }
 }
 
 void artC::grad_init(const boost3D& artinit, Views& v, const StateSpace& s) {
-  for (int sex = 0; sex < s.NG; sex++)
-    for (int agr = 0; agr < s.hAG; agr++)
-      for (int cd4 = 0; cd4 < s.hDS; cd4++) {
-        gradART[sex][agr][cd4][0] += artinit[sex][agr][cd4] / s.DT;
-        for (int dur = 0; dur < s.hTS; dur++)
-          v.now_art[sex][agr][cd4][dur] += s.DT * gradART[sex][agr][cd4][dur];
-      }
+  int j = 0;
+  for (int i = 0; i < N; i += s.hTS) {
+    gradART.data()[i] += artinit.data()[j] / s.DT;
+    ++j;
+  }
+  for (int i = 0; i < N; i++)
+    *(at_this + i) += *(gradART.data() + i) * s.DT;
 }
 
 void artC::grad_db_init(const boost3D& artinit_db, const StateSpace& s) {
-  for (int sex = 0; sex < s.NG; sex++)
-    for (int agr = 0; agr < s.hDB; agr++)
-      for (int cd4 = 0; cd4 < s.hDS; cd4++) {
-        gradART_db[sex][agr][cd4][0] += artinit_db[sex][agr][cd4] / s.DT;
-        for (int dur = 0; dur < s.hTS; dur++)
-          data_db[s.year][sex][agr][cd4][dur] += 
-            s.DT * gradART_db[sex][agr][cd4][dur];
-      }
+  int j = 0;
+  for (int i = 0; i < N; i += s.hTS) {
+    gradART_db.data()[i] += artinit_db.data()[j] / s.DT;
+    ++j;
+  }
+  for (int i = 0; i < N; i++)
+    *(at_this_db + i) += *(gradART_db.data() + i) * s.DT;
 }
 
 void artC::adjust_pop(const boost2D& adj_prob, Views& v, const StateSpace& s) {
-  for (int sex = 0; sex < s.NG; sex++)
-    for (int agr = 0; agr < s.hAG; agr++)
-      for (int cd4 = 0; cd4 < s.hDS; cd4++)
-        for (int dur = 0; dur < s.hTS; dur++) {
-          v.now_art[sex][agr][cd4][dur] *= adj_prob[sex][agr];
-          if (s.MODEL == 2 && agr < s.hDB)
-            data_db[s.year][sex][agr][cd4][dur] *= adj_prob[sex][agr];
-        }
+  int agr = 0;
+  for (int i = 0; i < N; i += s.hTS * s.hDS) {
+    for (int j = 0; j < s.hTS * s.hDS; j++) {
+      *(at_this + i+j) *= *(adj_prob.data() + agr);
+      if (s.MODEL == 2)
+        *(at_this_db + i+j) *= *(adj_prob.data() + agr);
+    }
+    ++agr;
+  }
 }
 
 void artC::count_death(Views& v, const Parameters& p, const StateSpace& s) {
-  for (int sex = 0; sex < s.NG; sex++)
-    for (int agr = 0; agr < s.hAG; agr++)
-      for (int cd4 = 0; cd4 < s.hDS; cd4++)
-        for (int dur = 0; dur < s.hTS; dur++) {
-          double x =
-            p.nh.art_mort[sex][agr][cd4][dur] * p.nh.artmx_timerr[s.year][dur];
-          death_[sex][agr][cd4][dur] = v.now_art[sex][agr][cd4][dur] * x;
-          if (s.MODEL == 2 && agr < s.hDB)
-            death_db_[sex][agr][cd4][dur] =
-              data_db[s.year][sex][agr][cd4][dur] * x;
-        }
+  double * at_death = death_.data(), * at_death_db = death_db_.data();
+  const double * at_amx = p.nh.art_mort.data(),
+               * at_mxrr = p.nh.artmx_timerr.data();
+  for (int i = 0; i < N; i += s.hTS)
+    for (int j = 0; j < s.hTS; j++) {
+      *(at_death + i+j) = *(at_this + i+j) * *(at_amx + i+j) * *(at_mxrr + j);
+      if (s.MODEL == 2)
+        *(at_death_db + i+j) = *(at_this_db + i+j) * *(at_amx + i+j) * *(at_mxrr + j);
+    }
 }

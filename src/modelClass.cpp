@@ -13,12 +13,18 @@ void Model::initiate() {
 void Model::update_views() {
   artpop.at_prev     = artpop.at_this;
   artpop.at_this    += artpop.N;
+  
   hivpop.at_prev     = hivpop.at_this;
   hivpop.at_this    += hivpop.N;
+  
   pop.at_prev        = pop.at_this;
   pop.at_this       += pop.N;
+  
   artpop.at_prev_db  = artpop.at_this_db;
   artpop.at_this_db += artpop.N;
+
+  hivpop.at_prev_db  = hivpop.at_this_db;
+  hivpop.at_this_db += hivpop.N;
 }
 
 void Model::aging(Views& v) {

@@ -160,10 +160,16 @@ StateSpace::StateSpace(const SEXP& fp) :
   h_fert_        (INTEGER(get_value(fp_ss, "h_fert_idx")), get_dim_1D(fp_ss, "h_fert_idx")),
   h_age15to49_   (INTEGER(get_value(fp_ss, "h_age15to49_idx")), get_dim_1D(fp_ss, "h_age15to49_idx")),
   h_age15plus_   (INTEGER(get_value(fp_ss, "h_age15plus_idx")), get_dim_1D(fp_ss, "h_age15plus_idx")),
-  pAG_FERT       ((p_fert_[0]      - 1) + p_fert_.num_elements()),
-  hAG_FERT       ((h_fert_[0]      - 1) + h_fert_.num_elements()),
-  pAG_1549       ((p_age15to49_[0] - 1) + p_age15to49_.num_elements()),
-  hAG_1549       ((h_age15to49_[0] - 1) + h_age15to49_.num_elements()),
-  pAG_15plus     ((p_age15plus_[0] - 1) + p_age15plus_.num_elements()),
-  hAG_15plus     ((h_age15plus_[0] - 1) + h_age15plus_.num_elements())
+  pAG_FERT_l     (p_fert_[0]      - 1),
+  hAG_FERT_l     (h_fert_[0]      - 1),
+  pAG_1549_l     (p_age15to49_[0] - 1),
+  hAG_1549_l     (h_age15to49_[0] - 1),
+  pAG_15plus_l   (p_age15plus_[0] - 1),
+  hAG_15plus_l   (h_age15plus_[0] - 1),
+  pAG_FERT_u     (pAG_FERT_l   + p_fert_.num_elements()),
+  hAG_FERT_u     (hAG_FERT_l   + h_fert_.num_elements()),
+  pAG_1549_u     (pAG_1549_l   + p_age15to49_.num_elements()),
+  hAG_1549_u     (hAG_1549_l   + h_age15to49_.num_elements()),
+  pAG_15plus_u   (pAG_15plus_l + p_age15plus_.num_elements()),
+  hAG_15plus_u   (hAG_15plus_l + h_age15plus_.num_elements())
   {}
