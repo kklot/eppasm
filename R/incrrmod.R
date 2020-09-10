@@ -127,7 +127,7 @@ transf_incrr <- function(theta_incrr, param, fp){
       if(fp$incidmod == "eppspectrum")
         param$incrr_sex <- param$incrr_sex * exp(sexadjust)
       else if(fp$incidmod == "transm")
-        param$mf_transm_rr <- param$mf_transm_rr * exp(sexadjust)
+        param$incrr_sex <- param$incrr_sex * exp(sexadjust)
 
       ## adjustment to age IRRs among 15-24
       m15to24_adjust <- approx(c(2002, 2007, 2012), c(-5, 0, 5)*c(par[3], 0, par[4]), years, rule=2)$y
