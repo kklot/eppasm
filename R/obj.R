@@ -45,17 +45,28 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
         #' # access the fit
         #' obj$fits('default')
 
-        fit = function(save_as, country, mixing=FALSE, ...) {
-            # current model
+        fit = function(save_as, country, ...) {
+            user <- list(...)
             opts <- list(
-              obj           = inputs_nat[[country]],
-              eppmod        = "rhybrid", 
-              algorithm     = 'optim',
-              fitincrr      = TRUE,
-              rw_start      = 2005,
-              version       = 'C'
+                # current model / remove eventually
+                obj           = inputs_nat[[country]],
+                eppmod        = "rhybrid", 
+                algorithm     = 'optim',
+                fitincrr      = TRUE,
+                rw_start      = 2005,
+                version       = 'C'
             )
             attr(opts$obj, 'specfp')$relinfectART <- 1-0.7
+            dbpar <- list(
+                # sexual parameters
+                db_rate       = est_db_rate[[country]],
+                mixmat        = est_mixmat[[country]],
+                est_senesence = est_senesence, # dummy for C++ reads
+                est_pcr       = est_pcr # dummy for C++ reads
+            ) # ignore in old code
+            # update options
+            dbpar <- modifyList(dbpar, user)
+            opts <- modifyList(opts, dbpar)
             fits[[save_as]] <<- do.call('fitmod', opts)
         }
     ),
@@ -63,7 +74,7 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
         read_ext = function(name) {
             pth = system.file("extdata", name, package="eppasm")
             readRDS(pth)
-        },        
+        },
         read_data = function(x=0) {
             # eppasm_inputs
             inputs_nat <<- read_ext('inputs_nat.rds')
