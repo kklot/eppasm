@@ -24,7 +24,7 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
         #' @param inputs no need for now
         #' @return nothing
          
-        initiate = function(inputs) {
+        initialize = function(inputs) {
             private$read_data()
         }, 
 
