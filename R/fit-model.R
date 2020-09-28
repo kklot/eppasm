@@ -293,7 +293,7 @@ fitmod <- function(obj, ..., epp=FALSE, B0 = 1e2, B = 1e3, B.re = 1e3,
                    algorithm = c("optim", "DE", "IMIS"),
                    control_optim = list(),
                    control_DE = list(),
-                   with_debut=FALSE, with_mixing=FALSE, doParallel=0, version="K") {
+                   with_debut=FALSE, with_mixing=FALSE, doParallel=0, version='C') {
 
   ## ... : updates to fixed parameters (fp) object to specify fitting options
 
@@ -320,7 +320,8 @@ fitmod <- function(obj, ..., epp=FALSE, B0 = 1e2, B = 1e3, B.re = 1e3,
   fp     <- prepare_fp_for_fitmod(epp, fp, likdat)
   
   # for debut and mixing
-  if (is.null(version) && (with_debut|with_mixing)) version <- "K"
+  if (with_debut|with_mixing) version <- "K"
+  if (with_mixing) with_debut <- TRUE
   fp$VERSION  = version
   fp$ss$MODEL = ifelse(with_debut, 2L, 1L)
   fp$ss$MIX   = ifelse(with_mixing, TRUE, FALSE)
