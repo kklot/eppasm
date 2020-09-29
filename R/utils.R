@@ -1,3 +1,20 @@
+#' Model's attributes to list
+#' 
+#' We do this in R because naming output in C++ is not as flexible as assigning
+#' attribbutes when different models return different set of outputs. 
+#' See Rinlinedfuns.h's mkNamed
+#' 
+#' @param x x
+#' @return a list with name
+.asList <- function(mod) {
+    att = attributes(mod)
+    keep = which(names(att) %in% c('dim', 'class'))
+    att = att[-keep]
+    attributes(mod)[-keep] = NULL
+    att[['pop']] = mod
+    att
+}
+
 sweepx <- function(...) sweep(..., FUN='*') # missing FUN too many times!
 
 # Natural age to index

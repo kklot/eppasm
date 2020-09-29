@@ -37,14 +37,14 @@ simmod.specfp <- function(fp) {
     if (VERSION=="K") { # C++ classes
       fp  <- prepare_fp_for_Cpp(fp, MODEL, MIX)
       mod <- .Call(eppasmOOpp, fp)
-      return(mod)
+      return(.asList(mod))
     } 
     else { # keep this for tests
       fp$eppmodInt <- match(fp$eppmod, c("rtrend", "directincid"), nomatch=0) # 0: r-spline;
       fp$incidmodInt <- match(fp$incidmod, c("eppspectrum"))-1L  # -1 for 0-based indexing
       mod <- .Call(eppasmC, fp)
       class(mod) <- "spec"
-      return(mod)
+      return(.asList(mod))
     }
   }
   pop     <- popEPP$new(fp, MODEL, VERSION, MIX)
@@ -69,12 +69,12 @@ simmod.specfp <- function(fp) {
     }
   }
   if (MODEL != 0) {
-    attr(pop, "hivpop") <- hivpop$data
-    attr(pop, "artpop") <- artpop$data
+    pop$set("public", "hivpop", hivpop$data, overwrite = TRUE)
+    pop$set("public", "artpop", artpop$data, overwrite = TRUE)
     if (MODEL==2) {
-      attr(pop, "vpop") <- pop$VIRGIN$data
-      attr(pop, "vpopart") <- artpop$db_data
-      attr(pop, "vpophiv") <- hivpop$db_data
+      pop$set("public", "vpop", pop$VIRGIN$data, overwrite = TRUE)
+      pop$set("public", "vpopart", artpop$db_data, overwrite = TRUE)
+      pop$set("public", "vpophiv", hivpop$db_data, overwrite = TRUE)
     }
     class(pop) <- "spec"
   }
