@@ -69,12 +69,13 @@ simmod.specfp <- function(fp) {
     }
   }
   if (MODEL != 0) {
-    pop$set("public", "hivpop", hivpop$data, overwrite = TRUE)
-    pop$set("public", "artpop", artpop$data, overwrite = TRUE)
+    pop$hivpop <- hivpop$data
+    pop$hivpop <- hivpop$data
+    pop$artpop <- artpop$data
     if (MODEL==2) {
-      pop$set("public", "vpop", pop$VIRGIN$data, overwrite = TRUE)
-      pop$set("public", "vpopart", artpop$db_data, overwrite = TRUE)
-      pop$set("public", "vpophiv", hivpop$db_data, overwrite = TRUE)
+      pop$vpop    <- pop$VIRGIN$data
+      pop$vpopart <- artpop$db_data
+      pop$vpophiv <- hivpop$db_data
     }
     class(pop) <- "spec"
   }
