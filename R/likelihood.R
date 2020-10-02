@@ -243,7 +243,7 @@ prepare_hhsincid_likdat <- function(hhsincid, fp){
 #' @param mod model output, object of class `spec`.
 #' @param hhsincid.dat prepared houshold survey incidence estimates (see perp
 ll_hhsincid <- function(mod, hhsincid.dat){
-  logincid <- log(incid(mod, fp))
+  logincid <- log(incid(mod$data, fp))
   ll.incid <- sum(dnorm(hhsincid.dat$log_incid, logincid[hhsincid.dat$idx], hhsincid.dat$log_incid.se, TRUE))
   return(ll.incid)
 }
@@ -393,9 +393,9 @@ ll_all = function(theta, fp, likdat) {
   ## Household survey likelihood
   if (exists("hhs.dat", where=likdat)) {
     if (exists("ageprev", fp) && fp$ageprev=="binom")
-      .hhs <- ll_hhsage_binom(mod, likdat$hhs.dat)
+      .hhs <- ll_hhsage_binom(mod$data, likdat$hhs.dat)
     else ## use probit likelihood
-      .hhs <- ll_hhsage(mod, likdat$hhs.dat) # probit-transformed model
+      .hhs <- ll_hhsage(mod$data, likdat$hhs.dat) # probit-transformed model
   }
 
   if (!is.null(likdat$hhsincid.dat))
@@ -410,7 +410,7 @@ ll_all = function(theta, fp, likdat) {
                         likdat$ancrtcens.dat$yidx,
                         likdat$hhsincid.dat$idx)
     
-    qM.all <- suppressWarnings(qnorm(prev(mod)))
+    qM.all <- suppressWarnings(qnorm(mod$prev15to49))
 
     if (any(is.na(qM.all[lastdata.idx - 9:0]))) {
       .rprior <- -Inf

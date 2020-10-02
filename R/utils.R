@@ -11,7 +11,7 @@
     keep = which(names(att) %in% c('dim', 'class'))
     att = att[-keep]
     attributes(mod)[-keep] = NULL
-    att[['pop']] = mod
+    att[['data']] = mod
     att
 }
 

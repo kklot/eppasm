@@ -291,9 +291,9 @@ sample_ancsite_pred <- function(mod, fp, newdata, b_site){
   datgrp <- newdata$datgrp
 
   if(exists("pregprev", fp) && !fp$pregprev)
-    qM <- suppressWarnings(qnorm(ageprev(mod, datgrp$aidx, rep(0L, nrow(datgrp)), datgrp$yidx, datgrp$agspan)))
+    qM <- suppressWarnings(qnorm(ageprev(mod$data, datgrp$aidx, rep(0L, nrow(datgrp)), datgrp$yidx, datgrp$agspan)))
   else
-    qM <- suppressWarnings(qnorm(agepregprev(mod, fp, datgrp$aidx, datgrp$yidx, datgrp$agspan)))
+    qM <- suppressWarnings(qnorm(agepregprev(mod$data, fp, datgrp$aidx, datgrp$yidx, datgrp$agspan)))
 
   ## Design matrix for fixed effects portion
   df$type <- factor(df$type, c("ancss", "ancrt"))
