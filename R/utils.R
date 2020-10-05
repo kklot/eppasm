@@ -1,3 +1,23 @@
+#' Recursively convert list embeded to numeric
+#' 
+#' Recursively convert list embeded to numeric
+#' 
+#' @param a_list a list
+#' @return a_list with all element converted to numeric
+#' @export
+recursively_double <- function(a_list) {
+    rapply(a_list, 
+        function(x) {
+            atx = attributes(x)
+            x = as.numeric(x)
+            attributes(x) = atx
+            x
+        }, 
+        c("integer", 'logical', 'matrix', 'array'), 
+        how='replace'
+    )
+}
+
 #' Model's attributes to list
 #' 
 #' We do this in R because naming output in C++ is not as flexible as assigning
@@ -69,7 +89,6 @@ prepare_fp_for_Cpp <- function(fp, MODEL=1L, MIX=FALSE) {
     # This is a mess
     # rhybrid = 0 # rtrend = 1 # directincid =2
     fp$eppmodInt <- match(fp$eppmod, c("rtrend", "directincid"), nomatch=0)
-    fp$ss$MODEL <- as.integer(MODEL)
     fp$ss$MIX   <- MIX
     names(fp$ss) <- gsub('\\.', '_', names(fp$ss))
     names(fp) <- gsub('\\.', '_', names(fp))
@@ -85,12 +104,8 @@ prepare_fp_for_Cpp <- function(fp, MODEL=1L, MIX=FALSE) {
         }        
     }
     
-    if ( is.integer(fp$ss$time_epi_start) )
-        fp$ss$time_epi_start <- as.numeric(fp$ss$time_epi_start)
     fp$incidmodInt <- match(fp$incidmod, c("eppspectrum"))-1L
     fp$ancrtInt <- match(fp$ancrt, c("both"), nomatch=0) # just a placeholder
-    fp$art15plus_isperc <- apply(fp$art15plus_isperc, 2, as.numeric)
-    fp$ss$h_ag_span <- as.numeric(fp$ss$h_ag_span)
     if (!exists("rw_start", where=fp)) 
         fp$rw_start <- fp$rt$rw_start;
     if (!exists("rvec", where=fp)) 
@@ -109,10 +124,6 @@ prepare_fp_for_Cpp <- function(fp, MODEL=1L, MIX=FALSE) {
     if (is.null(dim(fp$artmx_timerr))) { # repicate for 3 treatment durations
         fp$artmx_timerr <- matrix(rep(fp$artmx_timerr, 3), nrow=3, byrow=TRUE)
     }
-    # if (fp$ss$MIX) { # scaled for sexual mixing model C++
-    #     max_by_year <- apply(fp$incrr_age, 3, function(x) apply(x, 2, max))
-    #     fp$incrr_age <- sweep(fp$incrr_age, 2:3, max_by_year, "/")
-    # }
     if (is.null(fp$balancing)) {
         fp$balancing <- .5 # for C++ read, not doing anything
     }
@@ -120,7 +131,7 @@ prepare_fp_for_Cpp <- function(fp, MODEL=1L, MIX=FALSE) {
         fp$fage <- matrix(1, 1, 2) # for C++ read, not doing anything
     if (is.null(fp$est_pcr))
         fp$est_pcr <- matrix(1, 1, 2) # for C++ read, not doing anything
-    fp
+    recursively_double(fp)
 }
 # Converting prior assumption to parameter boundary for DE
 prior_to_DE_bounds <- function(fp) {

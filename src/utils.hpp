@@ -49,8 +49,8 @@ array<boost2D_ptr::index, 2> get_dim_2D(SEXP array, const char *str);
 array<boost3D_ptr::index, 3> get_dim_3D(SEXP array, const char *str);
 array<boost4D_ptr::index, 4> get_dim_4D(SEXP array, const char *str);
 
-boost2D sumByAG (const boost2D& B, const boost1I& age_of_interest, int new_size);
-boost1D sumByAG (const boost1D& B, const boost1I& age_of_interest, int new_size);
+boost2D sumByAG (const boost2D& B, const boost1D& age_of_interest, int new_size);
+boost1D sumByAG (const boost1D& B, const boost1D& age_of_interest, int new_size);
 dvec sumByAG (const dvec& B, const ivec& age_of_interest, int new_size);
 
 // Boost array NA/INF to zero: num/0.0 or 0.0/0.0

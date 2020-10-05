@@ -78,7 +78,7 @@ boost::array<boost4D_ptr::index, 4> get_dim_4D(SEXP r_in, const char *str) {
 }
 
 // age_of_interest example is ag_idx, not shifted
-boost2D sumByAG (const boost2D& B, const boost1I& age_of_interest, int new_size) 
+boost2D sumByAG (const boost2D& B, const boost1D& age_of_interest, int new_size) 
 {
   int row = B.shape()[0], col = B.shape()[1];
   boost2D A(extents[ row ][ new_size ]);
@@ -93,7 +93,7 @@ boost2D sumByAG (const boost2D& B, const boost1I& age_of_interest, int new_size)
   return A;
 }
 
-boost1D sumByAG (const boost1D& B, const boost1I& age_of_interest, int new_size) 
+boost1D sumByAG (const boost1D& B, const boost1D& age_of_interest, int new_size) 
 {
   boost1D A(extents[ new_size ]);
   int current_age_group = age_of_interest[0]; // first age group

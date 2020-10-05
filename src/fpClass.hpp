@@ -45,14 +45,14 @@ struct NaturalHistoryParam {
 struct ArtData {
   boost2D_ptr    art15plus_num;
   boost2D_ptr    art15plus_isperc;
-  const int    * artcd4elig_idx;  // NOTE: 1-based indexing
+  const double * artcd4elig_idx;  // NOTE: 1-based indexing
   const double * specpop_percelig;
   const double * pw_artelig;
   const double   who34percelig;
   const double * art_dropout;
   const double * median_cd4init;
-  const int    * med_cd4init_cat;
-  const int    * med_cd4init_input;
+  const double * med_cd4init_cat;
+  const double * med_cd4init_input;
   const int      art_alloc_method;
   const double   art_alloc_mxweight;
   const int      scale_cd4_mort;
@@ -68,7 +68,7 @@ struct RtrendParam {
   const double * n_rw;
   const double * rw_dk;
   const double * rw_knots;
-  const int    * rw_idx;
+  const double * rw_idx;
   const double * n_param;
   const double * rw_transition;
   RtrendParam() {};
@@ -94,7 +94,7 @@ struct IncidenceParam {
   double         tsEpidemicStart; //ts_epidemic_start;
   double       * proj_steps;
   double         iota;
-  const int    * logitiota;
+  const double * logitiota;
   const double * rvec;
   double         rw_start;
   RtrendParam    rt;
@@ -114,8 +114,8 @@ struct PaediatricHivParam {
 };
 
 struct AncParam {
-  const int    * ancsitedata;
-  const int    * ancrt;
+  const double * ancsitedata;
+  const double * ancrt;
   const double * ancbias;
   const double * v_infl;
   const double * ancrtcens_vinfl;
@@ -160,16 +160,16 @@ struct StateSpace {
   const int    hDB;
   const int    n_steps;
   const int    tARTstart;
-  boost1I_ptr  p_fert_;
-  boost1I_ptr  p_age15to49_;
-  boost1I_ptr  p_age15plus_;
+  boost1D_ptr  p_fert_;
+  boost1D_ptr  p_age15to49_;
+  boost1D_ptr  p_age15plus_;
   boost1D_ptr  h_ag_span;
-  boost1I_ptr  ag_;
-  boost1I_ptr  agfirst_;
-  boost1I_ptr  aglast_;
-  boost1I_ptr  h_fert_;
-  boost1I_ptr  h_age15to49_;
-  boost1I_ptr  h_age15plus_;
+  boost1D_ptr  ag_;
+  boost1D_ptr  agfirst_;
+  boost1D_ptr  aglast_;
+  boost1D_ptr  h_fert_;
+  boost1D_ptr  h_age15to49_;
+  boost1D_ptr  h_age15plus_;
   const int pAG_FERT, hAG_FERT, pAG_1549, hAG_1549, pAG_15plus, hAG_15plus;
   // 
   StateSpace(const SEXP& fp);
