@@ -181,18 +181,19 @@ void popC::infect_mix (hivC& hivpop, artC& artpop, int ii, Views& v, const Param
       transm_prev[sex][age] = (hiv_not_treated + hiv_treated * (1 - p.ic.relinfectART)) / all_pop;
     }
   }
-
+  // only two modes: "eppspectrum"=0 or "transm"=1
+  double sex_factor = (p.ic.incidmod == 0) ? p.ic.incrr_sex[s.year] : p.ic.mf_transm_rr[s.year];
   //+intervention effects and time epidemic start
   if (p.ic.proj_steps[ts] == p.ic.tsEpidemicStart) {
     for (int age = 0; age < s.pAG; ++age) {
       transm_prev[s.M][age] += p.ic.iota;
-      transm_prev[s.F][age] += p.ic.iota * pow(p.ic.incrr_sex[s.year], 0.5);
+      transm_prev[s.F][age] += p.ic.iota * pow(sex_factor, 0.5);
     }    
   }
 
   multiply_with_inplace(transm_prev, rvec[ts]);
   for (int age = 0; age < s.pAG; ++age)
-    transm_prev[s.M][age] *= p.ic.incrr_sex[s.year];
+    transm_prev[s.M][age] *= sex_factor;
 
   boost2D inc_m(extents[s.pAG][s.pAG]), inc_f(extents[s.pAG][s.pAG]);
 

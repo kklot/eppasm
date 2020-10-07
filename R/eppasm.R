@@ -41,7 +41,7 @@ simmod.specfp <- function(fp) {
     } 
     else { # keep this for tests
       fp$eppmodInt <- match(fp$eppmod, c("rtrend", "directincid"), nomatch=0) # 0: r-spline;
-      fp$incidmodInt <- match(fp$incidmod, c("eppspectrum"))-1L  # -1 for 0-based indexing
+      fp$incidmodInt <- match(fp$incidmod, c("eppspectrum", "transm"))-1L  # -1 for 0-based indexing
       mod <- .Call(eppasmC, fp)
       class(mod) <- "spec"
       return(.asList(mod))

@@ -43,11 +43,11 @@ infect_mix = function(hivpop, artpop, ii) {
     hiv_not_treated   <- data_active[,,hivp.idx] - hiv_treated
     transm_prev <- (hiv_not_treated + hiv_treated * (1 - p$relinfectART)) / 
                     rowSums(data_active,,2) # prevalence adjusted for art
-    if (p$proj.steps[ts] == p$tsEpidemicStart) {
-      transm_prev <- sweep(transm_prev, 2, p$iota * c(1, sqrt(p$incrr_sex[year])), '+')
-    }
-    inc_r <- rvec[ts] * sweepx(transm_prev, 2, c(p$incrr_sex[year], 1))
-    inc_r <- inc_r * p$incrr_age[,,year]
+    # other one is "transm"
+    sex_factor = ifelse(p$incidmod == "eppspectrum", p$incrr_sex[year], p$mf_transm_rr[year])
+    if (p$proj.steps[ts] == p$tsEpidemicStart) 
+      transm_prev <- sweep(transm_prev, 2, p$iota * c(1, sqrt(sex_factor)), '+')
+    inc_r <- rvec[ts] * sweepx(transm_prev, 2, c(sex_factor, 1))
 
     inc_m <- sweepx(n_m_active_negative, 2, inc_r[, f.idx])
     inc_f <- sweepx(n_f_active_negative, 2, inc_r[, m.idx])

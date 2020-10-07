@@ -70,6 +70,7 @@ IncidenceParam::IncidenceParam(const SEXP& fp) :
     balancing     (*REAL(get_value(fp, "balancing"))),
     relinfectART  (*REAL(get_value(fp, "relinfectART"))),
     incrr_sex     ( REAL(get_value(fp, "incrr_sex"))),
+    mf_transm_rr  ( REAL(get_value(fp, "mf_transm_rr"))),
     fage          ( REAL(get_value(fp, "fage")), get_dim_2D(fp, "fage")),
     circ_incid_rr (*REAL(get_value(fp, "circ_incid_rr")))
   {

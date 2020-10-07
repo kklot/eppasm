@@ -103,8 +103,7 @@ prepare_fp_for_Cpp <- function(fp, MODEL=1L, MIX=FALSE) {
           fp$n_steps <- fp$SIM_YEARS * fp$ss$hiv_steps_per_year
         }        
     }
-    
-    fp$incidmodInt <- match(fp$incidmod, c("eppspectrum"))-1L
+    fp$incidmodInt <- match(fp$incidmod, c("eppspectrum", "transm"))-1L
     fp$ancrtInt <- match(fp$ancrt, c("both"), nomatch=0) # just a placeholder
     if (!exists("rw_start", where=fp)) 
         fp$rw_start <- fp$rt$rw_start;
@@ -131,6 +130,8 @@ prepare_fp_for_Cpp <- function(fp, MODEL=1L, MIX=FALSE) {
         fp$fage <- matrix(1, 1, 2) # for C++ read, not doing anything
     if (is.null(fp$est_pcr))
         fp$est_pcr <- matrix(1, 1, 2) # for C++ read, not doing anything
+    if (is.null(fp$mf_transm_rr))
+        fp$mf_transm_rr <- fp$incrr_sex
     recursively_double(fp)
 }
 # Converting prior assumption to parameter boundary for DE
