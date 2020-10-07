@@ -1,6 +1,6 @@
-#' R6 class for a eppasm object 
+#' R6 class for a eppasm object - dev mode
 #' 
-#' Holding data, fitting methods,...
+#' Holding data, fitting methods,... 
 #' 
 #' @details
 #' Read data, fit model variations, and visualize...
@@ -68,6 +68,17 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
             dbpar <- modifyList(dbpar, user)
             opts <- modifyList(opts, dbpar)
             fits[[save_as]] <<- do.call('fitmod', opts)
+        },
+        backup = function(name, with_data=TRUE) {
+            if (with_data)
+                saveRDS(self, name)
+            else
+                saveRDS(fits, name)
+        },
+        simulate = function(name, version="R") {
+            with(fits[[name]], {
+                simmod(update(fp, list=fnCreateParam(par, fp)))
+            })
         }
     ),
     private = list(
