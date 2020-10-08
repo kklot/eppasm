@@ -1,47 +1,17 @@
 #' @useDynLib eppasm eppasmC eppasmOOpp
 simmod.specfp <- function(fp) {
 
-  # Move all model options to fp
   MODEL   = ifelse(is.null(fp$ss$MODEL), 1, fp$ss$MODEL)
   MIX     = ifelse(is.null(fp$ss$MIX), FALSE, fp$ss$MIX)
   VERSION = ifelse(is.null(fp$VERSION), 'R', fp$VERSION)
-
-  if (!exists("popadjust", where=fp))
-    fp$popadjust <- FALSE
-
-  if (!exists("incidmod", where=fp))
-    fp$incidmod <- "eppspectrum"
-
-  if (!exists("DT", where=fp))
-    fp$ss$DT <- 1 / fp$ss$hiv_steps_per_year
-
-  if (is.null(dim(fp$artmx_timerr))) { # repicate for 3 treatment durations
-      fp$artmx_timerr <- matrix(rep(fp$artmx_timerr, 3), nrow=3, byrow=TRUE)
-  }
-
-  if (MODEL == 2)
-    fp <- update_fp_debut(fp, max_debut_age=30)
   
-  if (MIX && !exists("mixmat", where=fp)) {
-    fp$mixmat <- readRDS(system.file("extdata", "est_mixmat.rds", package="eppasm"))[[1]]
-    message('using a random mixing matrix')
-  }
-  if (MIX && !exists("est_pcr", where=fp)) {
-    fp$est_pcr <- readRDS(system.file("extdata", "est_pcr.rds", package="eppasm"))[[1]]
-  }
-  if (!exists("est_senesence", where=fp)) {
-    fp$est_senesence <- readRDS(system.file("extdata", "est_senesence.rds", package="eppasm"))[[1]]
-  }
-
   if (VERSION != "R") {
     if (VERSION=="K") { # C++ classes
-      fp  <- prepare_fp_for_Cpp(fp, MODEL, MIX)
+      fp  <- prepare_fp_for_Cpp(fp)
       mod <- .Call(eppasmOOpp, fp)
       return(.asList(mod))
     } 
     else { # keep this for tests
-      fp$eppmodInt <- match(fp$eppmod, c("rtrend", "directincid"), nomatch=0) # 0: r-spline;
-      fp$incidmodInt <- match(fp$incidmod, c("eppspectrum", "transm"))-1L  # -1 for 0-based indexing
       mod <- .Call(eppasmC, fp)
       class(mod) <- "spec"
       return(.asList(mod))

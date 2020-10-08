@@ -293,48 +293,9 @@ fitmod <- function(obj, ..., epp=FALSE, B0 = 1e2, B = 1e3, B.re = 1e3,
                    algorithm = c("optim", "DE", "IMIS"),
                    control_optim = list(),
                    control_DE = list(),
-                   with_debut=FALSE, with_mixing=FALSE, doParallel=0, version='C') {
-
+                   doParallel=0) {
   ## ... : updates to fixed parameters (fp) object to specify fitting options
-
-  if(epp)
-    fp <- update(attr(obj, 'eppfp'), ...)
-  else
-    fp <- update(attr(obj, 'specfp'), ...)
-
-  #=== TODO: move these out of this function
-  ## Prepare likelihood data
-
-  eppd   <- attr(obj, "eppd")
-  likdat <- prepare_likdat(eppd, fp)
-  
-  if (exists("ancsite.dat", likdat)) {
-    fp$ancsitedata = TRUE
-    fp <- prepare_anc_model(fp, eppd)
-  }
-  
-  if (exists("ancrtcens.dat", likdat)) {
-    fp$ancrt       = "both"
-  }
-
-  fp     <- prepare_fp_for_fitmod(epp, fp, likdat)
-  
-  # for debut and mixing
-  if (with_debut|with_mixing) version <- "K"
-  if (with_mixing) with_debut <- TRUE
-  fp$VERSION  = version
-  fp$ss$MODEL = ifelse(with_debut, 2L, 1L)
-  fp$ss$MIX   = ifelse(with_mixing, TRUE, FALSE)
-
-  if (fp$ss$MODEL == 2)
-    fp <- update_fp_debut(fp, max_debut_age=30L)
-
-  if (fp$ss$MIX && !exists("mixmat", where=fp)) { # add these outside
-    fp$mixmat <- readRDS(system.file("extdata", "est_mixmat_scaled.rds", package="eppasm"))[[1]]
-    cat('running with random mixing matrix...\n')
-  }
-  # move these out of this function===#
-  
+  list2env(prepare_fp_likdat(obj, epp, ...), environment())
   ## Fit using DE
   if (algorithm=='DE') {
     message('Fitting with Differential Evolution..\r')

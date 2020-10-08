@@ -85,53 +85,11 @@ ldinvlogit <- function(x){v <- invlogit(x); log(v) + log(1-v)}
 #' set default value for mixing model and dummy variables
 #' 
 #' @param fp Fix parameters
-prepare_fp_for_Cpp <- function(fp, MODEL=1L, MIX=FALSE) {
-    # This is a mess
-    # rhybrid = 0 # rtrend = 1 # directincid =2
-    fp$eppmodInt <- match(fp$eppmod, c("rtrend", "directincid"), nomatch=0)
-    fp$ss$MIX   <- MIX
+prepare_fp_for_Cpp <- function(fp) {
     names(fp$ss) <- gsub('\\.', '_', names(fp$ss))
     names(fp) <- gsub('\\.', '_', names(fp))
     if (exists("rt", where=fp))
         names(fp$rt) <- gsub('\\.', '_', names(fp$rt))
-    if (!exists("DT", where=fp))
-        fp$ss$DT <- 1 / fp$ss$hiv_steps_per_year
-    if (!exists("n_steps", where=fp)) {
-        if(fp$eppmod %in% c("logrw", "rhybrid")) {
-          fp$n_steps <- length(fp$proj_steps)
-        } else {
-          fp$n_steps <- fp$SIM_YEARS * fp$ss$hiv_steps_per_year
-        }        
-    }
-    fp$incidmodInt <- match(fp$incidmod, c("eppspectrum", "transm"))-1L
-    fp$ancrtInt <- match(fp$ancrt, c("both"), nomatch=0) # just a placeholder
-    if (!exists("rw_start", where=fp)) 
-        fp$rw_start <- fp$rt$rw_start;
-    if (!exists("rvec", where=fp)) 
-        fp$rvec <- 1
-    if (!exists("pDB", where=fp$ss))  { # mixing model parameters
-        fp$ss$pDB <- 1L
-        fp$db_rate <- array(1, c(fp$ss$pDB, 2, 52))
-    }
-    if (!exists("mixmat", where=fp))  { # mixing model parameters
-        fp$mixmat <- array(0, c(fp$ss$pAG, fp$ss$pAG, fp$ss$NG))
-    }
-    if (!fp$popadjust) {
-        fp$targetpop <- array(0, c(1,1,1))
-        fp$entrantpop <- array(0, c(1,1))
-    }
-    if (is.null(dim(fp$artmx_timerr))) { # repicate for 3 treatment durations
-        fp$artmx_timerr <- matrix(rep(fp$artmx_timerr, 3), nrow=3, byrow=TRUE)
-    }
-    if (is.null(fp$balancing)) {
-        fp$balancing <- .5 # for C++ read, not doing anything
-    }
-    if (is.null(fp$fage))
-        fp$fage <- matrix(1, 1, 2) # for C++ read, not doing anything
-    if (is.null(fp$est_pcr))
-        fp$est_pcr <- matrix(1, 1, 2) # for C++ read, not doing anything
-    if (is.null(fp$mf_transm_rr))
-        fp$mf_transm_rr <- fp$incrr_sex
     recursively_double(fp)
 }
 # Converting prior assumption to parameter boundary for DE

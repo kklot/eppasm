@@ -1,13 +1,30 @@
 # extract from fitmod()
-prepare_fp_for_fitmod <- function(epp, fp, likdat) {
+# dumping everything here to clean up later
+prepare_fp_likdat <- function(obj, epp, ...) {
+    if(epp)
+      fp <- update(attr(obj, 'eppfp'), ...)
+    else
+      fp <- update(attr(obj, 'specfp'), ...)
+
+    ## Prepare likelihood data
+    eppd   <- attr(obj, "eppd")
+    likdat <- prepare_likdat(eppd, fp)
+    
+    if (exists("ancsite.dat", likdat)) {
+      fp$ancsitedata <- TRUE
+      fp <- prepare_anc_model(fp, eppd)
+    }
+    
+    if (exists("ancrtcens.dat", likdat))
+      fp$ancrt       = "both"
+    
     if(fp$eppmod %in% c("logrw", "rhybrid")) { # THIS IS REALLY MESSY, NEED TO REFACTOR CODE
       fp$SIM_YEARS <- as.integer(max(likdat$ancsite.dat$df$yidx,
                                      likdat$hhs.dat$yidx,
                                      likdat$ancrtcens.dat$yidx,
                                      likdat$hhsincid.dat$idx))
-      fp$proj.steps <- seq(fp$ss$proj_start+0.5,
-                           fp$ss$proj_start-1+fp$SIM_YEARS+0.5, 
-                           by = 1/fp$ss$hiv_steps_per_year)
+      fp$proj.steps <- with(fp$ss, seq(proj_start+0.5, proj_start-1+fp$SIM_YEARS+0.5, 
+        by = 1 / fp$ss$hiv_steps_per_year))
       fp$n_steps <- length(fp$proj.steps)
     } else {
       fp$SIM_YEARS <- fp$ss$PROJ_YEARS
@@ -29,11 +46,64 @@ prepare_fp_for_fitmod <- function(epp, fp, likdat) {
         fp$proj.steps[which.min(abs(fp$proj.steps - fp$ss$time_epi_start+0.5))]
 
     fp$logitiota <- TRUE
+    # only run Kinh's code if specify
+    fp$VERSION  = ifelse(exists("version", where=fp), fp$version, "C")
+    fp$ss$MODEL = 1
+    if (exists("with_mixing", where=fp) && fp$with_mixing) {
+      fp$VERSION    = "K" # override
+      fp$ss$MODEL   = 2
+      fp$ss$MIX     = TRUE
+      if (!exists("mixmat", where=fp))
+        fp$mixmat <- readRDS(system.file("extdata", "est_mixmat_scaled.rds", package="eppasm"))[[1]]
+    } else
+      fp$ss$MIX     = FALSE
+    if (exists("with_debut", where=fp) && fp$with_debut) {
+      fp$VERSION  = "K" # override
+      fp$ss$MODEL = 2
+      if (!exists("max_debut_age", where=fp)) max_debut_age = 30
+      fp = update_fp_debut(fp, max_debut_age)
+    }
+    fp <- fp_fill_missing(fp)
+    list(fp=fp, likdat=likdat)
+}
 
-    ## Prepare the incidence model
-    if (is.null(fp$incidmod))
-      fp$incidmod <- "eppspectrum"
-    fp
+fp_fill_missing <- function(fp) { # need further checks
+	warning('Default values filled, check their validity in fp_fill_missing')
+  if (!exists("DT", where=fp$ss)) 
+    fp$ss$DT <- 1 / fp$ss$hiv_steps_per_year
+  if (!exists("incidmod", where=fp)) 
+    fp$incidmod <- "eppspectrum"
+  if (!exists("popadjust", where=fp))
+    fp$popadjust <- FALSE
+  if (is.null(dim(fp$artmx_timerr))) # repicate for 3 treatment durations
+    fp$artmx_timerr <- matrix(rep(fp$artmx_timerr, 3), nrow=3, byrow=TRUE)
+  if (!exists("rw_start", where=fp)) 
+    fp$rw_start <- fp$rt$rw_start
+  if (!exists("est_pcr", where=fp))
+    fp$est_pcr <- readRDS(system.file("extdata", "est_pcr.rds", package="eppasm"))[[1]]
+  if (!exists("est_senesence", where=fp))
+    fp$est_senesence <- readRDS(system.file("extdata", "est_senesence.rds", package="eppasm"))[[1]]
+  if (!exists("rvec", where=fp)) 
+      fp$rvec <- 1
+  if (!fp$popadjust) {
+      fp$targetpop <- array(0, c(1,1,1))
+      fp$entrantpop <- array(0, c(1,1))
+  }
+  if (!exists("mf_transm_rr", where=fp))
+      fp$mf_transm_rr <- fp$incrr_sex
+  if (!exists("balancing", where=fp))
+      fp$balancing <- .5 # for C++ read, not doing anything
+  if (!exists("fage", where=fp))
+      fp$fage <- matrix(1, 1, 2) # for C++ read, not doing anything
+  if (!exists("est_pcr", where=fp))
+      fp$est_pcr <- matrix(1, 1, 2) # for C++ read, not doing anything
+  if (!exists("relsexact_cd4cat", where=fp))
+      fp$relsexact_cd4cat <- rep(1, 7)
+   # rhybrid = 0 # rtrend = 1 # directincid =2
+  fp$eppmodInt <- match(fp$eppmod, c("rtrend", "directincid"), nomatch=0) # 0: r-spline;
+  fp$incidmodInt <- match(fp$incidmod, c("eppspectrum", "transm"))-1L  # -1 for 0-based indexing
+  fp$ancrtInt <- match(fp$ancrt, c("both"), nomatch=0) # just a placeholder
+  fp
 }
 
 obj_fn = function(theta, fp, likdat) {
