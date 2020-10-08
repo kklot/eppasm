@@ -47,10 +47,10 @@ prepare_fp_likdat <- function(obj, epp, ...) {
 
     fp$logitiota <- TRUE
     # only run Kinh's code if specify
-    fp$VERSION  = ifelse(exists("version", where=fp), fp$version, "C")
+    fp$VERSION  = ifelse(exists("VERSION", where=fp), fp$VERSION, "C")
     fp$ss$MODEL = 1
     if (exists("with_mixing", where=fp) && fp$with_mixing) {
-      fp$VERSION    = "K" # override
+      fp$VERSION    = ifelse(fp$VERSION=='C', 'K', fp$VERSION)
       fp$ss$MODEL   = 2
       fp$ss$MIX     = TRUE
       if (!exists("mixmat", where=fp))
@@ -58,7 +58,7 @@ prepare_fp_likdat <- function(obj, epp, ...) {
     } else
       fp$ss$MIX     = FALSE
     if (exists("with_debut", where=fp) && fp$with_debut) {
-      fp$VERSION  = "K" # override
+      fp$VERSION  = ifelse(fp$VERSION=='C', 'K', fp$VERSION)
       fp$ss$MODEL = 2
       if (!exists("max_debut_age", where=fp)) max_debut_age = 30
       fp = update_fp_debut(fp, max_debut_age)
