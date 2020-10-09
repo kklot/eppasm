@@ -61,8 +61,8 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
                 # sexual parameters
                 db_rate       = est_db_rate[[country]],
                 mixmat        = est_mixmat[[country]],
-                est_senesence = est_senesence, # dummy for C++ reads
-                est_pcr       = est_pcr # dummy for C++ reads
+                est_senesence = est_senesence[[country]], 
+                est_pcr       = est_pcr[[country]] 
             ) # ignore in old code
             # update options
             dbpar <- modifyList(dbpar, user)
@@ -88,11 +88,12 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
         },
         read_data = function(x=0) {
             # eppasm_inputs
-            inputs_nat <<- read_ext('inputs_nat.rds')
+            inputs_nat    <<- read_ext('inputs_nat.rds')
             # sexual parameters
-            est_db_rate <<- read_ext('est_db_fixed_first_year.rds')
-            est_mixmat  <<- read_ext('est_mixmat_log_log_scaled.rds')
-            est_pcr <<- est_senesence <<- array(1, c(66, 2))
+            est_db_rate   <<- read_ext('est_db_fixed_first_year.rds')
+            est_mixmat    <<- read_ext('est_mixmat_log_log_scaled.rds')
+            est_pcr       <<- read_ext('est_pcr.rds')
+            est_senesence <<- read_ext('est_senesence.rds')
         }
     ),
     active = list()
