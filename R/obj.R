@@ -69,14 +69,31 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
             opts <- modifyList(opts, dbpar)
             fits[[save_as]] <<- do.call('fitmod', opts)
         },
-        backup = function(name, with_data=TRUE) {
+
+        #' @details
+        #' Save fit objects to files
+        #' 
+        #' @param name name of the fit in fits
+        #' @param with_data save the default data?
+        #' @return nothing
+        backup = function(name, with_data=FALSE) {
             if (with_data)
                 saveRDS(self, name)
             else
                 saveRDS(fits, name)
         },
+
+        #' @details
+        #' simulate the model from the fits, use to e.g. debug as it changes the
+        #' version to R not the C++ used to fit
+        #' 
+        #' @param name name of the fits
+        #' @param version default to R, not C++ ("C" or "K")
+        #' @return fitmod
+
         simulate = function(name, version="R") {
             with(fits[[name]], {
+                fp <- modifyList(fp, list(VERSION=version))
                 simmod(update(fp, list=fnCreateParam(par, fp)))
             })
         }
