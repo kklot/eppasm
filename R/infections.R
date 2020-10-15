@@ -5,26 +5,21 @@ infectFns <- c(
 infect_mix = function(hivpop, artpop, ii) {
     ts <- (year-2)/DT + ii
     update_active_pop_to(year)
-    # data_active <<- sweepx(data_active, 1:2, p$est_senesence)
+    data_active <<- sweepx(data_active, 1:2, p$est_senesence)
 
-    # actual_active <- data_active # at this point we have the "real" number of
+    actual_active <- data_active # at this point we have the "real" number of
                                  # people to calculate the prevalence; after adjustment
                                  # and balancing, the prev would not be correct
-
-    # Partner change rate as a risk reduction
-    # data_active <<- sweepx(data_active, 1:2, 1+p$est_pcr)
-
     # balancing
     prop_n_m <- data_active[, m.idx, hivn.idx]/ rowSums(data_active[, m.idx, ])
     prop_n_f <- data_active[, f.idx, hivn.idx]/ rowSums(data_active[, f.idx, ])
-
+    # Partner change rate as a risk reduction
+    data_active <<- sweepx(data_active, 1:2, 1+p$est_pcr)
     # sweep over sexual mixing matrices
     nc_m <- sweepx(p$mixmat[,,m.idx], 1, rowSums(data_active[, m.idx, ]))
     nc_f <- sweepx(p$mixmat[,,f.idx], 1, rowSums(data_active[, f.idx, ]))
 
     ratio_mf <- nc_m / t(nc_f)
-
-    if (is.null(p$balancing)) p$balancing <- .5
 
     nc_m_adj <- nc_m * (ratio_mf - p$balancing * (ratio_mf - 1)) / ratio_mf
     nc_f_adj <- t(nc_f) * (ratio_mf - p$balancing * (ratio_mf - 1))
@@ -39,16 +34,17 @@ infect_mix = function(hivpop, artpop, ii) {
       art_cov <- art_/(art_+hiv_)
       art_cov <- sapply(1:2, function(x) rep(art_cov[, x], h.ag.span))
     }
-    hiv_treated       <- data_active[,,hivp.idx] * art_cov
-    hiv_not_treated   <- data_active[,,hivp.idx] - hiv_treated
+    hiv_treated       <- actual_active[,,hivp.idx] * art_cov
+    hiv_not_treated   <- actual_active[,,hivp.idx] - hiv_treated
     transm_prev <- (hiv_not_treated + hiv_treated * (1 - p$relinfectART)) / 
-                    rowSums(data_active,,2) # prevalence adjusted for art
+                    rowSums(actual_active,,2) # prevalence adjusted for art
     # other one is "transm"
     sex_factor = ifelse(p$incidmod == "eppspectrum", p$incrr_sex[year], p$mf_transm_rr[year])
     if (p$proj.steps[ts] == p$tsEpidemicStart) 
       transm_prev <- sweep(transm_prev, 2, p$iota * c(1, sqrt(sex_factor)), '+')
     inc_r <- rvec[ts] * sweepx(transm_prev, 2, c(sex_factor, 1))
     inc_r <- inc_r * p$incrr_age[,,year]
+    inc_r <- sweepx(inc_r, 1, 1 - p$est_condom[, m.idx,year]) # male driven condom use
 
     inc_m <- sweepx(n_m_active_negative, 2, inc_r[, f.idx])
     inc_f <- sweepx(n_f_active_negative, 2, inc_r[, m.idx])

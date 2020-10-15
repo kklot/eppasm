@@ -111,10 +111,10 @@ void popC::infect_spec (const hivC& hivpop, const artC& artpop, int time_step,
 
 void popC::infect_mix (hivC& hivpop, artC& artpop, int ii, Views& v, const Parameters& p, const StateSpace& s) {
   update_active_pop_to(s.year, v, s);
-  // for (int ds = 0; ds < s.pDS; ds++)
-  //   for (int sex = 0; sex < s.NG; sex++)
-  //     for (int age = 0; age < s.pAG; age++)
-  //       data_active[ds][sex][age] *= p.ic.est_senesence[sex][age];
+  for (int ds = 0; ds < s.pDS; ds++)
+    for (int sex = 0; sex < s.NG; sex++)
+      for (int age = 0; age < s.pAG; age++)
+        data_active[ds][sex][age] *= p.ic.est_senesence[sex][age];
 
   dvec prop_n_m(s.pAG), prop_n_f(s.pAG);
 
@@ -128,10 +128,10 @@ void popC::infect_mix (hivC& hivpop, artC& artpop, int ii, Views& v, const Param
   boost3D actual_active = data_active;
 
   // number of sex acts
-  // for (int ds = 0; ds < s.pDS; ds++)
-  //   for (int sex = 0; sex < s.NG; sex++)
-  //     for (int age = 0; age < s.pAG; age++)
-  //       data_active[ds][sex][age] *= (1 + p.ic.est_pcr[sex][age]);
+  for (int ds = 0; ds < s.pDS; ds++)
+    for (int sex = 0; sex < s.NG; sex++)
+      for (int age = 0; age < s.pAG; age++)
+        data_active[ds][sex][age] *= (1 + p.ic.est_pcr[sex][age]);
 
   // balancing number of sex acts
   boost2D
@@ -175,8 +175,8 @@ void popC::infect_mix (hivC& hivpop, artC& artpop, int ii, Views& v, const Param
   double all_pop=0, hiv_treated=0, hiv_not_treated=0;
   for (int sex = 0; sex < s.NG; sex++) {
     for (int age = 0; age < s.pAG; age++) {
-      hiv_treated     = data_active[s.P][sex][age] * art_cov[sex][age];
-      hiv_not_treated = data_active[s.P][sex][age] * (1 - art_cov[sex][age]);
+      hiv_treated     = actual_active[s.P][sex][age] * art_cov[sex][age];
+      hiv_not_treated = actual_active[s.P][sex][age] * (1 - art_cov[sex][age]);
       all_pop         = actual_active[s.N][sex][age] + actual_active[s.P][sex][age];
       transm_prev[sex][age] = (hiv_not_treated + hiv_treated * (1 - p.ic.relinfectART)) / all_pop;
     }
@@ -200,8 +200,8 @@ void popC::infect_mix (hivC& hivpop, artC& artpop, int ii, Views& v, const Param
   // adjusted to IRRa
   for (int r = 0; r < s.pAG; ++r)
     for (int c = 0; c < s.pAG; ++c) {
-      inc_m[c][r] = n_m_active_negative[c][r] * transm_prev[s.F][c] * p.ic.incrr_age[s.year][s.F][c];
-      inc_f[c][r] = n_f_active_negative[c][r] * transm_prev[s.M][c] * p.ic.incrr_age[s.year][s.M][c];
+      inc_m[c][r] = n_m_active_negative[c][r] * transm_prev[s.F][c] * p.ic.incrr_age[s.year][s.F][c] * (1 - p.ic.est_condom[s.year][s.M][c]);
+      inc_f[c][r] = n_f_active_negative[c][r] * transm_prev[s.M][c] * p.ic.incrr_age[s.year][s.M][c] * (1 - p.ic.est_condom[s.year][s.M][c]); // male driver condom effect
     }
 
   boost1D inc_mv = rowSums(inc_m), inc_fv = rowSums(inc_f);

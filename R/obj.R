@@ -111,6 +111,7 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
             est_mixmat    <<- read_ext('est_mixmat_log_log_scaled.rds')
             est_pcr       <<- read_ext('est_pcr.rds')
             est_senesence <<- read_ext('est_senesence.rds')
+            est_condom    <<- read_ext('est_condom_logistic_malawi.rds')
         }
     ),
     active = list()

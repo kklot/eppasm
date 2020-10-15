@@ -82,6 +82,7 @@ struct IncidenceParam {
   boost2D_ptr    circ_prop;
   boost3D_ptr    mixmat;
   boost3D_ptr    db_rate;
+  boost3D_ptr    est_condom;
   boost2D_ptr    est_senesence;
   boost2D_ptr    est_pcr;
   const double   balancing;

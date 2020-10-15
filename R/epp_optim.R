@@ -97,6 +97,8 @@ fp_fill_missing <- function(fp) { # need further checks
       fp$fage <- matrix(1, 1, 2) # for C++ read, not doing anything
   if (!exists("est_pcr", where=fp))
       fp$est_pcr <- matrix(1, 1, 2) # for C++ read, not doing anything
+  if (!exists("est_condom", where=fp))
+      fp$est_condom <- array(0, c(66, 2, 52)) # for C++ read, not doing anything
   if (!exists("relsexact_cd4cat", where=fp))
       fp$relsexact_cd4cat <- rep(1, 7)
    # rhybrid = 0 # rtrend = 1 # directincid =2
