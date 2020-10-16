@@ -733,9 +733,9 @@ age15pop.spec <- function(mod) {colSums(mod$data[1,,,],,2)}
 #'@param year_last last year of outputs
 fnTR <- function(x, direction=c('F2M', 'M2F'), ratio=FALSE, year_last=48) {
   # number of incidence in male /  number of infected female
-  F2M <- colSums(attr(x, 'infections')[,1,3:year_last]) / colSums(x[,2,2,2:(year_last-1)])
+  F2M <- colSums(x$infections[,1,3:year_last]) / colSums(x$data[,2,2,2:(year_last-1)])
   # number of incidence in female /  number of infected male
-  M2F <- colSums(attr(x, 'infections')[,2,3:year_last]) / colSums(x[,1,2,2:(year_last-1)])
+  M2F <- colSums(x$infections[,2,3:year_last]) / colSums(x$data[,1,2,2:(year_last-1)])
   if (ratio) {
     message('Male/Female ratio')
     return(M2F/F2M)
@@ -751,9 +751,9 @@ fnTR <- function(x, direction=c('F2M', 'M2F'), ratio=FALSE, year_last=48) {
 #'@param year_last last year of outputs
 fnIR <- function(x, ratio=FALSE, year_last=48) {
   # number of incidence in male /  number of suseptible last year
-  M <- colSums(attr(x, 'infections')[,1,3:year_last]) / colSums(x[,1,1,2:(year_last-1)])
+  M <- colSums(x$infections[,1,3:year_last]) / colSums(x$data[,1,1,2:(year_last-1)])
   # number of incidence in female /  number of suseptible last year
-  F <- colSums(attr(x, 'infections')[,2,3:year_last]) / colSums(x[,2,1,2:(year_last-1)])
+  F <- colSums(x$infections[,2,3:year_last]) / colSums(x$data[,2,1,2:(year_last-1)])
   if (ratio) {
     message('Male/Female Ratio')
     return(M/F)
