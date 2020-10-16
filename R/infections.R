@@ -43,11 +43,17 @@ infect_mix = function(hivpop, artpop, ii) {
     if (p$proj.steps[ts] == p$tsEpidemicStart) 
       transm_prev <- sweep(transm_prev, 2, p$iota * c(1, sqrt(sex_factor)), '+')
     inc_r <- rvec[ts] * sweepx(transm_prev, 2, c(sex_factor, 1))
-    inc_r <- inc_r * p$incrr_age[,,year]
-    inc_r <- sweepx(inc_r, 1, 1 - p$est_condom[, m.idx,year]) # male driven condom use
+    # inc_r <- inc_r * p$incrr_age[,,year]
+    # inc_r <- sweepx(inc_r, 1, 1 - p$est_condom[, m.idx,year]) # male driven condom use
 
     inc_m <- sweepx(n_m_active_negative, 2, inc_r[, f.idx])
     inc_f <- sweepx(n_f_active_negative, 2, inc_r[, m.idx])
+
+    inc_m <- sweepx(inc_m, 1, p$incrr_age[, m.idx,year])
+    inc_f <- sweepx(inc_f, 1, p$incrr_age[, f.idx,year])
+
+    inc_m <- sweepx(inc_m, 1, 1-p$est_condom[, m.idx, year])
+    inc_f <- sweepx(inc_f, 1, 1-p$est_condom[, m.idx, year])
 
     infections.ts <- cbind(rowSums(inc_m), rowSums(inc_f))
     
