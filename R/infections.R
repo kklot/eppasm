@@ -53,7 +53,7 @@ infect_mix = function(hivpop, artpop, ii) {
     inc_f <- sweepx(inc_f, 1, p$incrr_age[, f.idx,year])
 
     inc_m <- sweepx(inc_m, 1, 1-p$est_condom[, m.idx, year])
-    inc_f <- sweepx(inc_f, 1, 1-p$est_condom[, m.idx, year])
+    inc_f <- sweepx(inc_f, 2, 1-p$est_condom[, m.idx, year])
 
     infections.ts <- cbind(rowSums(inc_m), rowSums(inc_f))
     
