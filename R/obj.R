@@ -62,7 +62,8 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
                 db_rate       = est_db_rate[[country]],
                 mixmat        = est_mixmat[[country]],
                 est_senesence = est_senesence[[country]], 
-                est_pcr       = est_pcr[[country]] 
+                est_pcr       = est_pcr[[country]],
+                est_condom    = est_condom
             ) # ignore in old code
             # update options
             dbpar <- modifyList(dbpar, user)
