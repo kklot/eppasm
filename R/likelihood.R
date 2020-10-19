@@ -259,7 +259,7 @@ prepare_likdat <- function(eppd, fp){
   
   likdat$hhs.dat <- prepare_hhsageprev_likdat(eppd$hhs, fp)
 
-  if (exists("ancsitedat", where=eppd)){
+  if (exists("ancsitedat", where=eppd) && nrow(eppd$ancsitedat)) {
 
     ancsitedat <- eppd$ancsitedat
     
