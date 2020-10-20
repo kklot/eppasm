@@ -73,6 +73,7 @@ fp_fill_missing <- function(fp) { # need further checks
     fp$ss$DT <- 1 / fp$ss$hiv_steps_per_year
   if (!exists("incidmod", where=fp)) 
     fp$incidmod <- "eppspectrum"
+  fp$incidmodInt <- match(fp$incidmod, c("eppspectrum", "transm"))-1L  # -1 for 0-based indexing
   if (!exists("popadjust", where=fp))
     fp$popadjust <- FALSE
   if (is.null(dim(fp$artmx_timerr))) # repicate for 3 treatment durations
@@ -103,7 +104,6 @@ fp_fill_missing <- function(fp) { # need further checks
       fp$relsexact_cd4cat <- rep(1, 7)
    # rhybrid = 0 # rtrend = 1 # directincid =2
   fp$eppmodInt <- match(fp$eppmod, c("rtrend", "directincid"), nomatch=0) # 0: r-spline;
-  fp$incidmodInt <- match(fp$incidmod, c("eppspectrum", "transm"))-1L  # -1 for 0-based indexing
   fp$ancrtInt <- match(fp$ancrt, c("both"), nomatch=0) # just a placeholder
   fp
 }
