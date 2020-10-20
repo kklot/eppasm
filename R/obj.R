@@ -7,6 +7,12 @@
 #' 
 eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE, 
     public = list(
+        #' @field data country prevalence data
+        prev_15to49_nat = NULL, 
+        #' @field data country prevalence data
+        prev_agesex_nat = NULL, 
+        #' @field data country prevalence data
+        ancsitedata = NULL, 
         #' @field inputs_nat country prevalence data.
         inputs_nat = NULL, 
         #' @field est_db_rate input sexual debut rate.
@@ -19,12 +25,13 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
         est_senesence = NULL,
 
         #' @details
-        #' Read default data
+        #' Read default data, can be overrided by providing args to fits(...)
         #' 
         #' @param inputs no need for now
         #' @return nothing
          
         initialize = function(inputs) {
+            private$read_input()
             private$read_data()
         }, 
 
@@ -100,11 +107,14 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
         }
     ),
     private = list(
-        read_ext = function(name) {
+        read_ext = function(name,...) {
             pth = system.file("extdata", name, package="eppasm")
-            readRDS(pth)
+            switch(tools::file_ext(pth),
+                rds = readRDS(pth,...),
+                csv = read.csv(pth,...)
+            )
         },
-        read_data = function(x=0) {
+        read_input = function(x=0) {
             # eppasm_inputs
             inputs_nat    <<- read_ext('inputs_nat.rds')
             # sexual parameters
@@ -113,6 +123,11 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
             est_pcr       <<- read_ext('est_pcr.rds')
             est_senesence <<- read_ext('est_senesence.rds')
             est_condom    <<- read_ext('est_condom_logistic_malawi.rds')
+        },
+        read_data = function() {
+            prev_15to49_nat <<- read_ext('prev_15to49_nat.csv')
+            prev_agesex_nat <<- read_ext('prev_agesex_nat.csv')
+            ancsitedata     <<- read_ext('ancsitedata.csv')
         }
     ),
     active = list()
