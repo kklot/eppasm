@@ -7,11 +7,11 @@
 #' 
 eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE, 
     public = list(
-        #' @field data country prevalence data
+        #' @field prev_15to49_nat country prevalence data
         prev_15to49_nat = NULL, 
-        #' @field data country prevalence data
+        #' @field prev_agesex_nat country prevalence data
         prev_agesex_nat = NULL, 
-        #' @field data country prevalence data
+        #' @field ancsitedata country prevalence data
         ancsitedata = NULL, 
         #' @field inputs_nat country prevalence data.
         inputs_nat = NULL, 
