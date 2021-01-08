@@ -68,10 +68,12 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
                 # sexual parameters
                 db_rate       = est_db_rate[[country]],
                 mixmat        = est_mixmat[[country]],
-                est_senesence = est_senesence[[country]], 
+                est_senesence = est_senesence[[country]],
                 est_pcr       = est_pcr[[country]],
-                est_condom    = est_condom
+                est_condom    = est_condom[[country]]
             ) # ignore in old code
+            if (any(unlist(lapply(dbpar, is.null))))
+                askYesNo('some sexual data is missing and filled by dummy value, continue?')
             # update options
             dbpar <- modifyList(dbpar, user)
             opts <- modifyList(opts, dbpar)
@@ -124,7 +126,7 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
             est_mixmat    <<- read_ext('est_mixmat_log_log_scaled.rds')
             est_pcr       <<- read_ext('est_pcr.rds')
             est_senesence <<- read_ext('est_senesence.rds')
-            est_condom    <<- read_ext('est_condom_logistic_malawi.rds')
+            est_condom    <<- read_ext('est_condom.rds')
         },
         read_data = function() {
             prev_15to49_nat <<- read_ext('prev_15to49_nat.csv')
