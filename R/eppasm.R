@@ -40,7 +40,6 @@ simmod.specfp <- function(fp) {
   }
   if (MODEL != 0) {
     pop$hivpop <- hivpop$data
-    pop$hivpop <- hivpop$data
     pop$artpop <- artpop$data
     if (MODEL==2) {
       pop$vpop    <- pop$VIRGIN$data
