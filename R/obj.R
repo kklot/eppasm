@@ -106,6 +106,7 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
                 fp <- modifyList(fp, list(VERSION=version))
                 simmod(update(fp, list=fnCreateParam(par, fp)))
             })
+        },
         print = function(...) {
             cat("EPPASM object\ntype help(eppasm) for details...\n")
         }
