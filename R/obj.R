@@ -27,10 +27,13 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
         #' @details
         #' Read default data, can be overrided by providing args to fits(...)
         #' 
-        #' @param inputs no need for now
+        #' @param old_fits Reinitialize but copy old fitted objects, this is due
+        #' to R6 once created reloading package does not update methods
         #' @return nothing
          
-        initialize = function(inputs) {
+        initialize = function(old_fits) {
+            if (!missing(old_fits)) 
+                fits <<- old_fits
             private$read_input()
             private$read_data()
         }, 
