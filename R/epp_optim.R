@@ -18,7 +18,7 @@ prepare_fp_likdat <- function(obj, epp, ...) {
     if (exists("ancrtcens.dat", likdat))
       fp$ancrt       = "both"
     
-    if(fp$eppmod %in% c("logrw", "rhybrid")) { # THIS IS REALLY MESSY, NEED TO REFACTOR CODE
+    if(fp$eppmod %in% c("logrw", "rhybrid", "rlogistic")) { # THIS IS REALLY MESSY, NEED TO REFACTOR CODE
       fp$SIM_YEARS <- as.integer(max(likdat$ancsite.dat$df$yidx,
                                      likdat$hhs.dat$yidx,
                                      likdat$ancrtcens.dat$yidx,
