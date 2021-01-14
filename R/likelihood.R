@@ -365,7 +365,7 @@ ll_all = function(theta, fp, likdat) {
 
   nparam <- length(theta)
   
-  fp <- update(fp, list=fnCreateParam(theta, fp))
+  fp <- update(fp, keep.attr=FALSE, list=fnCreateParam(theta, fp))
 
   if (fp$eppmod == "rspline")
     if (any(is.na(fp$rvec)) || min(fp$rvec) < 0 || max(fp$rvec) > 20) 

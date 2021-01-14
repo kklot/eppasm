@@ -32,6 +32,7 @@ recursively_double <- function(a_list) {
     att = att[-keep]
     attributes(mod)[-keep] = NULL
     att[['data']] = mod
+    class(att) = class(mod)
     att
 }
 
