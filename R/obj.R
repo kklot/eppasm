@@ -32,8 +32,12 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
         #' to R6 once created reloading package does not update methods
         #' @return nothing
          
-        initialize = function(old_fits) {
-            if (!missing(old_fits)) 
+        initialize = function(old_fits = NULL, restore_old_fits=TRUE) {
+            if (file.exists(private$paths$last_backup)) {
+                fits <<- readRDS(private$paths$last_backup)
+                cat('Restore the last backup fits\n')
+            }
+            if (!is.null(old_fits))
                 fits <<- old_fits
             private$read_input()
             private$read_data()
@@ -87,7 +91,7 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
         #' @details
         #' Save fit objects to files
         #' 
-        #' @param name name of the fit in fits
+        #' @param name name of the fit in fits with path (absolute or relative)
         #' @param with_data save the default data?
         #' @return nothing
         backup = function(name, with_data=FALSE) {
@@ -95,6 +99,7 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
                 saveRDS(self, name)
             else
                 saveRDS(fits, name)
+            private$paths$last_backup <- normalizePath(name)
         },
 
         #' @details
@@ -138,6 +143,7 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
             data$prev_agesex_nat <<- read_ext('prev_agesex_nat.csv')
             data$ancsitedata     <<- read_ext('ancsitedata.csv')
         },
+        paths = list(last_backup = '', list_backup = NULL)
     ),
     active = list()
 )
