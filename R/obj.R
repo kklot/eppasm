@@ -7,23 +7,24 @@
 #' 
 eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE, 
     public = list(
-        #' @field prev_15to49_nat country prevalence data
-        prev_15to49_nat = NULL, 
-        #' @field prev_agesex_nat country prevalence data
-        prev_agesex_nat = NULL, 
-        #' @field ancsitedata country prevalence data
-        ancsitedata = NULL, 
-        #' @field inputs_nat country prevalence data.
-        inputs_nat = NULL, 
-        #' @field est_db_rate input sexual debut rate.
-        est_db_rate = NULL, 
-        #' @field est_mixmat input sexual mixing matrices.
-        est_mixmat = NULL, 
-        #' @field est_pcr input partner change rate.
-        est_pcr = NULL, 
-        #' @field est_senesence input sexual senesence.
-        est_senesence = NULL,
-
+        data =  list(
+            #' @field prev_15to49_nat country prevalence data
+            prev_15to49_nat = NULL, 
+            #' @field prev_agesex_nat country prevalence data
+            prev_agesex_nat = NULL, 
+            #' @field ancsitedata country prevalence data
+            ancsitedata = NULL, 
+            #' @field inputs_nat country prevalence data.
+            inputs_nat = NULL, 
+            #' @field est_db_rate input sexual debut rate.
+            est_db_rate = NULL, 
+            #' @field est_mixmat input sexual mixing matrices.
+            est_mixmat = NULL, 
+            #' @field est_pcr input partner change rate.
+            est_pcr = NULL, 
+            #' @field est_senesence input sexual senesence.
+            est_senesence = NULL
+        ),
         #' @details
         #' Read default data, can be overrided by providing args to fits(...)
         #' 
@@ -59,7 +60,7 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
             user <- list(...)
             opts <- list(
                 # current model / remove eventually
-                obj           = inputs_nat[[country]],
+                obj           = data$inputs_nat[[country]],
                 eppmod        = "rhybrid", 
                 algorithm     = 'optim',
                 fitincrr      = TRUE,
@@ -69,11 +70,11 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
             attr(opts$obj, 'specfp')$relinfectART <- 1-0.7
             dbpar <- list(
                 # sexual parameters
-                db_rate       = est_db_rate[[country]],
-                mixmat        = est_mixmat[[country]],
-                est_senesence = est_senesence[[country]],
-                est_pcr       = est_pcr[[country]],
-                est_condom    = est_condom[[country]]
+                db_rate       = data$est_db_rate[[country]],
+                mixmat        = data$est_mixmat[[country]],
+                est_senesence = data$est_senesence[[country]],
+                est_pcr       = data$est_pcr[[country]],
+                est_condom    = data$est_condom[[country]]
             ) # ignore in old code
             if (any(unlist(lapply(dbpar, is.null))))
                 askYesNo('some sexual data is missing and filled by dummy value, continue?')
@@ -124,19 +125,19 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
         },
         read_input = function(x=0) {
             # eppasm_inputs
-            inputs_nat    <<- read_ext('inputs_nat.rds')
+            data$inputs_nat    <<- read_ext('inputs_nat.rds')
             # sexual parameters
-            est_db_rate   <<- read_ext('est_db_fixed_first_year.rds')
-            est_mixmat    <<- read_ext('est_mixmat_log_log_scaled.rds')
-            est_pcr       <<- read_ext('est_pcr.rds')
-            est_senesence <<- read_ext('est_senesence.rds')
-            est_condom    <<- read_ext('est_condom.rds')
+            data$est_db_rate   <<- read_ext('est_db_fixed_first_year.rds')
+            data$est_mixmat    <<- read_ext('est_mixmat_log_log_scaled.rds')
+            data$est_pcr       <<- read_ext('est_pcr.rds')
+            data$est_senesence <<- read_ext('est_senesence.rds')
+            data$est_condom    <<- read_ext('est_condom.rds')
         },
         read_data = function() {
-            prev_15to49_nat <<- read_ext('prev_15to49_nat.csv')
-            prev_agesex_nat <<- read_ext('prev_agesex_nat.csv')
-            ancsitedata     <<- read_ext('ancsitedata.csv')
-        }
+            data$prev_15to49_nat <<- read_ext('prev_15to49_nat.csv')
+            data$prev_agesex_nat <<- read_ext('prev_agesex_nat.csv')
+            data$ancsitedata     <<- read_ext('ancsitedata.csv')
+        },
     ),
     active = list()
 )
