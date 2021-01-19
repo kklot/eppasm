@@ -116,55 +116,34 @@ void popC::infect_mix (hivC& hivpop, artC& artpop, int ii, Views& v, const Param
       for (int age = 0; age < s.pAG; age++)
         data_active[ds][sex][age] *= p.ic.est_senesence[sex][age];
 
-  dvec prop_n_m(s.pAG), prop_n_f(s.pAG);
-
-  for (int r = 0; r < s.pAG; ++r) {
-    double Ma = data_active[s.N][s.M][r] + data_active[s.P][s.M][r];
-    double Fa = data_active[s.N][s.F][r] + data_active[s.P][s.F][r];
-    prop_n_m[r] = data_active[s.N][s.M][r] / Ma;
-    prop_n_f[r] = data_active[s.N][s.F][r] / Fa;
-  }
-  
-  boost3D actual_active = data_active;
-
-  // number of sex acts
-  for (int ds = 0; ds < s.pDS; ds++)
-    for (int sex = 0; sex < s.NG; sex++)
-      for (int age = 0; age < s.pAG; age++)
-        data_active[ds][sex][age] *= (1 + p.ic.est_pcr[sex][age]);
-
   // balancing number of sex acts
   boost2D
-    nc_m(extents[s.pAG][s.pAG]),
-    nc_f(extents[s.pAG][s.pAG]),
+    nc_m(extents[s.pAG][s.pAG]), nc_m_total(extents[s.pAG][s.pAG]),
+    nc_f(extents[s.pAG][s.pAG]), nc_f_total(extents[s.pAG][s.pAG]),
     nc_m_adj(extents[s.pAG][s.pAG]),
-    nc_f_adj(extents[s.pAG][s.pAG]),
-    n_m_active_negative(extents[s.pAG][s.pAG]),
-    n_f_active_negative(extents[s.pAG][s.pAG]);
-
-  for (int r = 0; r < s.pAG; ++r) {
-    double Ma = data_active[s.N][s.M][r] + data_active[s.P][s.M][r];
-    double Fa = data_active[s.N][s.F][r] + data_active[s.P][s.F][r];
-    for (int c = 0; c < s.pAG; ++c) {
-      nc_m[c][r] = Ma * p.ic.mixmat[s.M][c][r];
-      nc_f[c][r] = Fa * p.ic.mixmat[s.F][c][r];
+    nc_f_adj(extents[s.pAG][s.pAG]);
+  /* number of partnerships */
+  for (int r = 0; r < s.pAG; ++r) { // over my ages
+    for (int c = 0; c < s.pAG; ++c) { // over partner ages
+      nc_m[c][r] = p.ic.mixmat[s.M][c][r] * (1+p.ic.est_pcr[s.M][r]);
+      nc_f[c][r] = p.ic.mixmat[s.F][c][r] * (1+p.ic.est_pcr[s.F][r]);
     }
   }
-
+	/* number of pns formed by negative pop */
+  for (int r = 0; r < s.pAG; ++r) { // over my ages
+    for (int c = 0; c < s.pAG; ++c) { // over partner ages
+      nc_m_total[c][r] = nc_m[c][r] * data_active[s.N][s.M][r];
+      nc_f_total[c][r] = nc_f[c][r] * data_active[s.N][s.F][r];
+    }
+  }
+	/* balancing ratio */
   for (int r = 0; r < s.pAG; ++r) 
     for (int c = 0; c < s.pAG; ++c) {
-      double ratio_mf = nc_m[c][r] / nc_f[r][c];
-      double rr = ratio_mf - p.ic.balancing * (ratio_mf  - 1);
-      nc_m_adj[c][r] = nc_m[c][r] * rr / ratio_mf;
-      nc_f_adj[c][r] = nc_f[r][c] * rr;
+      double ratio_mf = nc_m_total[c][r] / nc_f_total[r][c];
+      nc_m_adj[c][r] = nc_m[c][r] / pow(ratio_mf, 0.5);
+      nc_f_adj[c][r] = nc_f[r][c] * pow(ratio_mf, 0.5);
     }
 
-  // Number of sex acts in HIV negative pop
-  for (int r = 0; r < s.pAG; ++r)
-    for (int c = 0; c < s.pAG; ++c) {
-      n_m_active_negative[c][r] = nc_m_adj[c][r] * prop_n_m[r];
-      n_f_active_negative[c][r] = nc_m_adj[r][c] * prop_n_f[r];
-    }
   boost2D art_cov(extents[s.NG][s.pAG]);
   if (s.year >= s.tARTstart-1)
     art_cov = age_sex_cov(hivpop, artpop, v, p, s);
@@ -175,9 +154,9 @@ void popC::infect_mix (hivC& hivpop, artC& artpop, int ii, Views& v, const Param
   double all_pop=0, hiv_treated=0, hiv_not_treated=0;
   for (int sex = 0; sex < s.NG; sex++) {
     for (int age = 0; age < s.pAG; age++) {
-      hiv_treated     = actual_active[s.P][sex][age] * art_cov[sex][age];
-      hiv_not_treated = actual_active[s.P][sex][age] * (1 - art_cov[sex][age]);
-      all_pop         = actual_active[s.N][sex][age] + actual_active[s.P][sex][age];
+      hiv_treated     = data_active[s.P][sex][age] * art_cov[sex][age];
+      hiv_not_treated = data_active[s.P][sex][age] * (1 - art_cov[sex][age]);
+      all_pop         = data_active[s.N][sex][age] + data_active[s.P][sex][age];
       transm_prev[sex][age] = (hiv_not_treated + hiv_treated * (1 - p.ic.relinfectART)) / all_pop;
     }
   }
@@ -200,9 +179,9 @@ void popC::infect_mix (hivC& hivpop, artC& artpop, int ii, Views& v, const Param
   // adjusted to IRRa
   for (int r = 0; r < s.pAG; ++r)
     for (int c = 0; c < s.pAG; ++c) {
-      inc_m[c][r] = n_m_active_negative[c][r] * transm_prev[s.F][c] * 
+      inc_m[c][r] = data_active[s.N][s.M][r] * nc_m_adj[c][r] * transm_prev[s.F][c] * 
         p.ic.incrr_age[s.year][s.M][r] * (1 - p.ic.est_condom[s.year][s.M][r]);
-      inc_f[c][r] = n_f_active_negative[c][r] * transm_prev[s.M][c] * 
+      inc_f[c][r] = data_active[s.N][s.F][r] * nc_f_adj[c][r] * transm_prev[s.M][c] * 
         p.ic.incrr_age[s.year][s.F][r] * (1 - p.ic.est_condom[s.year][s.M][c]); // male driver condom effect
     }
 

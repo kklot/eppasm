@@ -5,28 +5,20 @@ infectFns <- c(
 infect_mix = function(hivpop, artpop, ii) {
     ts <- (year-2)/DT + ii
     update_active_pop_to(year)
+    
     data_active <<- sweepx(data_active, 1:2, p$est_senesence)
-
-    actual_active <- data_active # at this point we have the "real" number of
-                                 # people to calculate the prevalence; after adjustment
-                                 # and balancing, the prev would not be correct
-    # balancing
-    prop_n_m <- data_active[, m.idx, hivn.idx]/ rowSums(data_active[, m.idx, ])
-    prop_n_f <- data_active[, f.idx, hivn.idx]/ rowSums(data_active[, f.idx, ])
-    # Partner change rate as a risk reduction
-    data_active <<- sweepx(data_active, 1:2, 1+p$est_pcr)
-    # sweep over sexual mixing matrices
-    nc_m <- sweepx(p$mixmat[,,m.idx], 1, rowSums(data_active[, m.idx, ]))
-    nc_f <- sweepx(p$mixmat[,,f.idx], 1, rowSums(data_active[, f.idx, ]))
-
-    ratio_mf <- nc_m / t(nc_f)
-
-    nc_m_adj <- nc_m * (ratio_mf - p$balancing * (ratio_mf - 1)) / ratio_mf
-    nc_f_adj <- t(nc_f) * (ratio_mf - p$balancing * (ratio_mf - 1))
-    
-    n_m_active_negative <- sweepx(nc_m_adj, 1, prop_n_m)
-    n_f_active_negative <- sweepx(t(nc_f_adj), 1, prop_n_f)
-    
+    # sweep over sexual mixing matrices, this results in the number of partnerships
+    nc_m <- sweepx(p$mixmat[,,m.idx], 1, 1+p$est_pcr[, 1])
+    nc_f <- sweepx(p$mixmat[,,f.idx], 1, 1+p$est_pcr[, 2])
+	# get the total numner of partnerships formed by HIV negative population
+    nc_m_total <- sweepx(nc_m, 1, data_active[, m.idx, hivn.idx])
+    nc_f_total <- sweepx(nc_f, 1, data_active[, f.idx, hivn.idx])
+	# the balancing ratio
+    ratio_mf <- nc_m_total / t(nc_f_total)
+    # adjusted number of partnerships
+    nc_m_adj <- nc_m / ratio_mf^0.5
+    nc_f_adj <- t(nc_f) * ratio_mf^0.5
+	# at this point we have the number of partnerships in each age combinations
     art_cov <- matrix(0, pAG, NG)
     if (year >= p$tARTstart) {
       art_ <- colSums(artpop$data[,,,,year] + artpop$data_db[,,,,year],,2)
@@ -34,20 +26,18 @@ infect_mix = function(hivpop, artpop, ii) {
       art_cov <- art_/(art_+hiv_)
       art_cov <- sapply(1:2, function(x) rep(art_cov[, x], h.ag.span))
     }
-    hiv_treated       <- actual_active[,,hivp.idx] * art_cov
-    hiv_not_treated   <- actual_active[,,hivp.idx] - hiv_treated
+    hiv_treated       <- data_active[,,hivp.idx] * art_cov
+    hiv_not_treated   <- data_active[,,hivp.idx] - hiv_treated
     transm_prev <- (hiv_not_treated + hiv_treated * (1 - p$relinfectART)) / 
-                    rowSums(actual_active,,2) # prevalence adjusted for art
+                    rowSums(data_active,,2) # prevalence adjusted for art
     # other one is "transm"
     sex_factor = ifelse(p$incidmod == "eppspectrum", p$incrr_sex[year], p$mf_transm_rr[year])
     if (p$proj.steps[ts] == p$tsEpidemicStart) 
       transm_prev <- sweep(transm_prev, 2, p$iota * c(1, sqrt(sex_factor)), '+')
     inc_r <- rvec[ts] * sweepx(transm_prev, 2, c(sex_factor, 1))
-    # inc_r <- inc_r * p$incrr_age[,,year]
-    # inc_r <- sweepx(inc_r, 1, 1 - p$est_condom[, m.idx,year]) # male driven condom use
 
-    inc_m <- sweepx(n_m_active_negative, 2, inc_r[, f.idx])
-    inc_f <- sweepx(n_f_active_negative, 2, inc_r[, m.idx])
+    inc_m <- sweepx(nc_m_adj, 2, inc_r[, f.idx])
+    inc_f <- sweepx(nc_f_adj, 2, inc_r[, m.idx])
 
     inc_m <- sweepx(inc_m, 1, p$incrr_age[, m.idx,year])
     inc_f <- sweepx(inc_f, 1, p$incrr_age[, f.idx,year])
@@ -55,7 +45,10 @@ infect_mix = function(hivpop, artpop, ii) {
     inc_m <- sweepx(inc_m, 1, 1-p$est_condom[, m.idx, year])
     inc_f <- sweepx(inc_f, 2, 1-p$est_condom[, m.idx, year])
 
-    infections.ts <- cbind(rowSums(inc_m), rowSums(inc_f))
+    infections.ts <- cbind(
+      rowSums(sweepx(inc_m, 1, data_active[, m.idx, hivn.idx])), 
+      rowSums(sweepx(inc_f, 1, data_active[, f.idx, hivn.idx]))
+    )
     
     if (p$proj.steps[ts] == p$tsEpidemicStart)
       infections.ts <- infections.ts * p$iota * sum(data[,,,year]) / sum(infections.ts)
