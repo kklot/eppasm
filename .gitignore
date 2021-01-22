@@ -11,3 +11,5 @@ dev/*
 inst/doc
 vignettes_src/
 man/*
+tags
+*.swp
