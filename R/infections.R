@@ -8,17 +8,18 @@ infect_mix = function(hivpop, artpop, ii) {
     
     data_active <<- sweepx(data_active, 1:2, p$est_senesence)
     # sweep over sexual mixing matrices, this results in the number of partnerships
+    # this is not depended on model parameters and could be sped up
     nc_m <- sweepx(p$mixmat[,,m.idx], 1, 1+p$est_pcr[, 1])
     nc_f <- sweepx(p$mixmat[,,f.idx], 1, 1+p$est_pcr[, 2])
-	# get the total numner of partnerships formed by HIV negative population
+		# get the total numner of partnerships formed by HIV negative population
     nc_m_total <- sweepx(nc_m, 1, data_active[, m.idx, hivn.idx])
     nc_f_total <- sweepx(nc_f, 1, data_active[, f.idx, hivn.idx])
-	# the balancing ratio
+		# the balancing ratio
     ratio_mf <- nc_m_total / t(nc_f_total)
     # adjusted number of partnerships
     nc_m_adj <- nc_m / ratio_mf^0.5
     nc_f_adj <- t(nc_f) * ratio_mf^0.5
-	# at this point we have the number of partnerships in each age combinations
+		# at this point we have the number of partnerships in each age combinations
     art_cov <- matrix(0, pAG, NG)
     if (year >= p$tARTstart) {
       art_ <- colSums(artpop$data[,,,,year] + artpop$data_db[,,,,year],,2)
@@ -34,17 +35,18 @@ infect_mix = function(hivpop, artpop, ii) {
     sex_factor = ifelse(p$incidmod == "eppspectrum", p$incrr_sex[year], p$mf_transm_rr[year])
     if (p$proj.steps[ts] == p$tsEpidemicStart) 
       transm_prev <- sweep(transm_prev, 2, p$iota * c(1, sqrt(sex_factor)), '+')
+		# r(t) x HIV prevalence
     inc_r <- rvec[ts] * sweepx(transm_prev, 2, c(sex_factor, 1))
-
+		# x contact rate adjusted
     inc_m <- sweepx(nc_m_adj, 2, inc_r[, f.idx])
     inc_f <- sweepx(nc_f_adj, 2, inc_r[, m.idx])
-
+		# x age pattern by sex
     inc_m <- sweepx(inc_m, 1, p$incrr_age[, m.idx,year])
     inc_f <- sweepx(inc_f, 1, p$incrr_age[, f.idx,year])
-
+		# x reduction using condom in men
     inc_m <- sweepx(inc_m, 1, 1-p$est_condom[, m.idx, year])
     inc_f <- sweepx(inc_f, 2, 1-p$est_condom[, m.idx, year])
-
+		# number of new infections
     infections.ts <- cbind(
       rowSums(sweepx(inc_m, 1, data_active[, m.idx, hivn.idx])), 
       rowSums(sweepx(inc_f, 1, data_active[, f.idx, hivn.idx]))
