@@ -149,7 +149,8 @@ void hivC::distribute_artinit (boost3D& artinit, artC& artpop,
             (v.now_hiv[sex][agr][cd4] + s.DT * grad[sex][agr][cd4]) + debut_now;
           if (artinit[sex][agr][cd4] > all_hivpop)
             artinit[sex][agr][cd4]   = all_hivpop;
-          pr_weight_db               = debut_now / all_hivpop;
+          pr_weight_db               = debut_now / all_hivpop; // this can be NaN
+					pr_weight_db 							 = std::isnan(pr_weight_db) ? 0 : pr_weight_db;
           n_artinit_db               = artinit[sex][agr][cd4] * pr_weight_db;
           artinit_db[sex][agr][cd4]  = n_artinit_db;
           artinit[sex][agr][cd4]    -= n_artinit_db;

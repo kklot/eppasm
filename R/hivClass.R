@@ -78,7 +78,9 @@ distribute_artinit = function(artinit, artpop) {
     debut_now     <- data_db[,,,year] + DT * grad_db
     all_hivpop    <- (data[,,,year] + DT * grad) + debut_now
     artinit       <- pmin(artinit, all_hivpop)
-    pr.weight_db  <- debut_now / all_hivpop
+    pr.weight_db  <- debut_now / all_hivpop # this can be NaN 
+		if (any(is.na(pr.weight_db)))
+			pr.weight_db[which(is.na(pr.weight_db), TRUE)] <- 0
     artinit_db    <- artinit * pr.weight_db
     artinit       <- artinit - artinit_db
     grad_db      <<- grad_db - artinit_db / DT

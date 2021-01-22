@@ -497,8 +497,10 @@ boost2D popC::age_sex_cov (hivC& hivpop, artC& artpop,
   boost2D off = hivpop.n_by_agr(v, p, s);
   boost2D out(extents[s.NG][s.pAG]);
   for (int sex = 0; sex < s.NG; ++sex)
-    for (int age = 0; age < s.pAG; ++age)
-      out[sex][age] = onn[sex][ s.ag_[age]-1 ] / 
+    for (int age = 0; age < s.pAG; ++age) {
+      double cov = onn[sex][ s.ag_[age]-1 ] / 
         (onn[sex][ s.ag_[age]-1 ] + off[sex][ s.ag_[age]-1 ]);
+			out[sex][age] = std::isnan(cov) ? 0 : cov;
+		}
   return out;
 }

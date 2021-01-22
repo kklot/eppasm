@@ -28,6 +28,15 @@ void popC::epp_art_init (hivC& hivpop, artC& artpop, int time_step, Views& v,
     n_art_init_[sex] = (n_afford > 0) ? n_afford : 0;
   }
   art_distribute(n_art_init_, p, s); // update art_init_
+	/* avoid NaN when none infectedi, we do this here because there are many
+	 * methods to distribute (inside art_distribute), which takes more
+	 * modifications than a post-hoc adjustment like this one*/	
+	for (int sex = 0; sex < s.NG; sex++)
+		for (int agr = 0; agr < s.hAG; agr++)
+			for (int cd4 = 0; cd4 < s.hDS; cd4++)
+				if (std::isnan(art_init_[sex][agr][cd4]))
+					art_init_[sex][agr][cd4] = 0;
+
   if (s.MODEL == 1) {
     for (int sex = 0; sex < s.NG; sex++)
       for (int agr = 0; agr < s.hAG; agr++)

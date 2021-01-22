@@ -102,6 +102,8 @@ epp_adjustpop <- function(pop, hivpop, artpop) {
   artnum_ii       <- art_initiate(art_curr, art_elig, time_step)
   art15plus.inits <- pmax(artnum_ii - art_curr, 0)
   artinit         <- art_distribute(art_elig, art15plus.inits)
+	# if no one infected artinit will be NaN, fallback to zero
+	artinit[which(is.na(artinit), TRUE)] <- 0
   if (MODEL == 1) 
     artinit <- pmin(artinit, hivpop$get(year) + DT * hivpop$grad)
   if (MODEL == 2) # split the number proportionally for active and idle pop

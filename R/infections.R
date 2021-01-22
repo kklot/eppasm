@@ -24,7 +24,9 @@ infect_mix = function(hivpop, artpop, ii) {
     if (year >= p$tARTstart) {
       art_ <- colSums(artpop$data[,,,,year] + artpop$data_db[,,,,year],,2)
       hiv_ <- colSums(hivpop$data[,,,year] + hivpop$data_db[,,,year],,1)
-      art_cov <- art_/(art_+hiv_)
+      art_cov <- art_/(art_+hiv_)      # when none infected can be NaN
+			if(any(is.nan(art_cov)))
+				art_cov[which(is.nan( art_cov ), TRUE)] <- 0
       art_cov <- sapply(1:2, function(x) rep(art_cov[, x], h.ag.span))
     }
     hiv_treated       <- data_active[,,hivp.idx] * art_cov
