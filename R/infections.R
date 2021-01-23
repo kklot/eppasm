@@ -18,7 +18,7 @@ infect_mix = function(hivpop, artpop, ii) {
     ratio_mf <- nc_m_total / t(nc_f_total)
     # adjusted number of partnerships
     nc_m_adj <- nc_m / ratio_mf^0.5
-    nc_f_adj <- t(nc_f) * ratio_mf^0.5
+    nc_f_adj <- nc_f * t(ratio_mf)^0.5
 		# at this point we have the number of partnerships in each age combinations
     art_cov <- matrix(0, pAG, NG)
     if (year >= p$tARTstart) {

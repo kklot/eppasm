@@ -141,7 +141,7 @@ void popC::infect_mix (hivC& hivpop, artC& artpop, int ii, Views& v, const Param
     for (int c = 0; c < s.pAG; ++c) {
       double ratio_mf = nc_m_total[c][r] / nc_f_total[r][c];
       nc_m_adj[c][r] = nc_m[c][r] / pow(ratio_mf, 0.5);
-      nc_f_adj[c][r] = nc_f[r][c] * pow(ratio_mf, 0.5);
+      nc_f_adj[r][c] = nc_f[r][c] * pow(ratio_mf, 0.5);
     }
 
   boost2D art_cov(extents[s.NG][s.pAG]);
