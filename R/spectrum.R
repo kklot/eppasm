@@ -345,6 +345,33 @@ calc_prev_by_age_year <- function(mod, fp){
   })
 }
 
+#' Get prevalence by age-group
+#' 
+#' @param name name of the saved fitted model in fits
+#' @return long table format
+calc_prev_agegr = function(mod, .agegr = seq(15, 50, 5)) {
+    # should split into a package epptools to reduce dependency of eppasm which
+    # does the fitting only
+    mod$data %>% unclass %>% 
+        data.table::as.data.table() %>% 
+        set_colnames(ktools::char(age, sex, hiv, year, n)) %>%
+        mutate(
+           year  = year+1969,
+           age   = 14+age,
+           sex   = if_else(sex==1, 'male', 'female'),
+           hiv   = if_else(hiv==1, 'no', 'yes'),
+           agegr = findInterval(age, .agegr)
+        ) %>% 
+        group_by(agegr) %>% 
+        mutate(agegr=paste(min(age), max(age), sep='-')) %>% ungroup %>% 
+        group_by(year, sex, agegr, hiv)  %>% 
+        summarise(n=sum(n)) %>% 
+        pivot_wider(values_from=n, names_from=hiv) %>% 
+        mutate(prev = yes/no) %>% 
+        select(prev)
+}
+
+
 calc_incid15to49 <- function(mod, fp){
   c(0, 
     colSums(mod$infections[fp$ss$p.age15to49.idx,,-1],,2) /
