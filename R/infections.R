@@ -1,3 +1,14 @@
+#' Mixing function as in Tim's model
+fn_mixmat_f <- function(j, i, kappa = 2, rho = 0.25, r = 0.15) {
+	if (j >= i) {
+		num = kappa * rho^kappa * (j - i + r)^(kappa - 1)
+		den = (1 + (rho * (j - i + r))^kappa)^2
+		return(num/den)
+	} 
+	else {
+		return(0)
+	}
+}
 # Annualized number of new infections
 # infect_spec <- function(pop, hivpop, artpop, ii, fp)
 # K moved to popClass method
