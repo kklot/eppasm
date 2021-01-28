@@ -54,7 +54,7 @@ prepare_fp_likdat <- function(obj, epp, ...) {
       fp$ss$MODEL   = 2
       fp$ss$MIX     = TRUE
       if (!exists("mixmat", where=fp))
-        fp$mixmat <- readRDS(system.file("extdata", "est_mixmat_scaled.rds", package="eppasm"))[[1]]
+        fp$mixmat <- readRDS(system.file("extdata", "est_mixmat_copula.rds", package="eppasm"))[[1]]
     } else
       fp$ss$MIX     = FALSE
     if (exists("with_debut", where=fp) && fp$with_debut) {
