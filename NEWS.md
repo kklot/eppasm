@@ -129,3 +129,8 @@
 
 - ART dropout as part of gradient calculation at end of 
 - Refactor ANC data model code and add option to input offset in regression equation.
+
+## eppasm
+
+- start to move namespace binding prior to .epp.env to enable runtime changes
+	(see `epp.set()`, `epp.get()`, and `epp.ls()`

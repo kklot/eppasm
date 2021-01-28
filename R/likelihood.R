@@ -20,37 +20,6 @@ ldbinom <- function(x, size, prob){
   lgamma(size+1) - lgamma(x+1) - lgamma(size-x+1) + x*log(prob) + (size-x)*log(1-prob)
 }
 
-## r-spline prior parameters
-
-## tau2.prior.rate <- 0.5  # initial sampling distribution for tau2 parameter
-tau2_init_shape <- 3
-tau2_init_rate <- 4
-
-tau2_prior_shape <- 0.001   # Inverse gamma parameter for tau^2 prior for spline
-tau2_prior_rate <- 0.001
-muSS <- 1/11.5               #1/duration for r steady state prior
-
-rw_prior_shape <- 300
-rw_prior_rate <- 1.0
-rw_prior_sd <- 0.06
-
-
-## r-trend prior parameters
-t0.unif.prior <- c(1970, 1990)
-## t1.unif.prior <- c(10, 30)
-## logr0.unif.prior <- c(1/11.5, 10)
-t1.pr.mean <- 20.0
-t1.pr.sd <- 4.5
-logr0.pr.mean <- 0.42
-logr0.pr.sd <- 0.23
-## rtrend.beta.pr.mean <- 0.0
-## rtrend.beta.pr.sd <- 0.2
-rtrend.beta.pr.mean <- c(0.46, 0.17, -0.68, -0.038)
-rtrend.beta.pr.sd <- c(0.12, 0.07, 0.24, 0.009)
-
-
-
-
 ###################################
 ####  Age/sex incidence model  ####
 ###################################
@@ -295,9 +264,9 @@ lprior <- function(theta, fp){
     nk <- fp$numKnots
 
     if (fp$eppmod == "logrw")
-      lpr <- bayes_lmvt(theta[2:fp$numKnots], rw_prior_shape, rw_prior_rate)
+      lpr <- bayes_lmvt(theta[2:fp$numKnots], .epp.env$priors.rw_prior_shape, .epp.env$priors.rw_prior_rate)
     else
-      lpr <- bayes_lmvt(theta[(1+fp$rtpenord):nk], tau2_prior_shape, tau2_prior_rate)
+      lpr <- bayes_lmvt(theta[(1+fp$rtpenord):nk], .epp.env$priors.tau2_prior_shape, .epp.env$priors.tau2_prior_rate)
 
     if (exists("r0logiotaratio", fp) && fp$r0logiotaratio)
       lpr <- lpr + dunif (theta[nk+1], r0logiotaratio.unif.prior[1], r0logiotaratio.unif.prior[2], log=TRUE)
@@ -305,19 +274,19 @@ lprior <- function(theta, fp){
       lpr <- lpr + lprior_iota(theta[nk+1], fp)
   } else if (fp$eppmod == "rlogistic") {
     epp_nparam <- 5
-    lpr <- sum(dnorm(theta[1:4], rlog_pr_mean, rlog_pr_sd, log=TRUE))
+    lpr <- sum(dnorm(theta[1:4], .epp.env$priors.rlog_pr_mean, .epp.env$priors.rlog_pr_sd, log=TRUE))
     lpr <- lpr + lprior_iota(theta[5], fp)
   } else if (fp$eppmod == "rtrend"){ # rtrend    
     epp_nparam <- 7
     
-    lpr <- dunif (round(theta[1]), t0.unif.prior[1], t0.unif.prior[2], log=TRUE) +
-      dnorm(round(theta[2]), t1.pr.mean, t1.pr.sd, log=TRUE) +
-      dnorm(theta[3], logr0.pr.mean, logr0.pr.sd, log=TRUE) +
-      sum(dnorm(theta[4:7], rtrend.beta.pr.mean, rtrend.beta.pr.sd, log=TRUE))
+    lpr <- dunif (round(theta[1]), .epp.env$priors.t0.unif.prior[1], .epp.env$priors.t0.unif.prior[2], log=TRUE) +
+      dnorm(round(theta[2]), .epp.env$priors.t1.pr.mean, .epp.env$priors.t1.pr.sd, log=TRUE) +
+      dnorm(theta[3], .epp.env$priors.logr0.pr.mean, .epp.env$priors.logr0.pr.sd, log=TRUE) +
+      sum(dnorm(theta[4:7], .epp.env$priors.rtrend.beta.pr.mean, .epp.env$priors.rtrend.beta.pr.sd, log=TRUE))
   } else if (fp$eppmod == "rhybrid"){
     epp_nparam <- fp$rt$n_param+1
-    lpr <- sum(dnorm(theta[1:4], rlog_pr_mean, rlog_pr_sd, log=TRUE)) +
-      sum(dnorm(theta[4+1:fp$rt$n_rw], 0, rw_prior_sd, log=TRUE))
+    lpr <- sum(dnorm(theta[1:4], .epp.env$priors.rlog_pr_mean, .epp.env$priors.rlog_pr_sd, log=TRUE)) +
+      sum(dnorm(theta[4+1:fp$rt$n_rw], 0, .epp.env$priors.rw_prior_sd, log=TRUE))
     lpr <- lpr + lprior_iota(theta[fp$rt$n_param+1], fp)
   }
 
@@ -471,9 +440,9 @@ sample.prior <- function(n, fp){
     else # logrw
       mat[,1] <- rnorm(n, 0.2, 1)                                                   # u[1]
     if (fp$eppmod == "logrw"){
-      mat[,2:fp$rt$n_rw] <- bayes_rmvt(n, fp$rt$n_rw-1, rw_prior_shape, rw_prior_rate)  # u[2:numKnots]
+      mat[,2:fp$rt$n_rw] <- bayes_rmvt(n, fp$rt$n_rw-1, .epp.env$priors.rw_prior_shape, .epp.env$priors.rw_prior_rate)  # u[2:numKnots]
     } else {
-      mat[,2:fp$numKnots] <- bayes_rmvt(n, fp$numKnots-1,tau2_init_shape, tau2_init_rate)  # u[2:numKnots]
+      mat[,2:fp$numKnots] <- bayes_rmvt(n, fp$numKnots-1,.epp.env$priors.tau2_init_shape, .epp.env$priors.tau2_init_rate)  # u[2:numKnots]
     }
 
     if (exists("r0logiotaratio", fp) && fp$r0logiotaratio)
@@ -481,16 +450,16 @@ sample.prior <- function(n, fp){
     else
       mat[,fp$numKnots+1] <- sample_iota(n, fp)
   } else if (fp$eppmod == "rlogistic"){
-    mat[,1:4] <- t(matrix(rnorm(4*n, rlog_pr_mean, rlog_pr_sd), 4))
+    mat[,1:4] <- t(matrix(rnorm(4*n, .epp.env$priors.rlog_pr_mean, .epp.env$priors.rlog_pr_sd), 4))
     mat[,5] <- sample_iota(n, fp)
   } else if (fp$eppmod == "rtrend"){ # r-trend
 
-    mat[,1] <- runif (n, t0.unif.prior[1], t0.unif.prior[2])           # t0
-    mat[,2] <- rnorm(n, t1.pr.mean, t1.pr.sd)
-    mat[,3] <- rnorm(n, logr0.pr.mean, logr0.pr.sd)  # r0
-    mat[,4:7] <- t(matrix(rnorm(4*n, rtrend.beta.pr.mean, rtrend.beta.pr.sd), 4, n))  # beta
+    mat[,1] <- runif(n, .epp.env$priors.t0.unif.prior[1], .epp.env$priors.t0.unif.prior[2])           # t0
+    mat[,2] <- rnorm(n, .epp.env$priors.t1.pr.mean, .epp.env$priors.t1.pr.sd)
+    mat[,3] <- rnorm(n, .epp.env$priors.logr0.pr.mean, logr0.pr.sd)  # r0
+    mat[,4:7] <- t(matrix(rnorm(4*n, .epp.env$priors.rtrend.beta.pr.mean, .epp.env$priors.rtrend.beta.pr.sd), 4, n))  # beta
   } else if (fp$eppmod == "rhybrid") {
-    mat[,1:4] <- t(matrix(rnorm(4*n, rlog_pr_mean, rlog_pr_sd), 4))
+    mat[,1:4] <- t(matrix(rnorm(4*n, .epp.env$priors.rlog_pr_mean, .epp.env$priors.rlog_pr_sd), 4))
     mat[,4+1:fp$rt$n_rw] <- rnorm(n*fp$rt$n_rw, 0, rw_prior_sd)  # u[2:numKnots]
     mat[,fp$rt$n_param+1] <- sample_iota(n, fp)
   }
@@ -530,9 +499,9 @@ ldsamp <- function(theta, fp){
       lpr <- dnorm(theta[1], 0.2, 1, log=TRUE)
 
     if (fp$eppmod == "logrw")
-      bayes_lmvt(theta[2:fp$rt$n_rw], rw_prior_shape, rw_prior_rate)
+      bayes_lmvt(theta[2:fp$rt$n_rw], .epp.env$priors.rw_prior_shape, .epp.env$priors.rw_prior_rate)
     else
-      lpr <- bayes_lmvt(theta[2:nk], tau2_prior_shape, tau2_prior_rate)
+      lpr <- bayes_lmvt(theta[2:nk], .epp.env$priors.tau2_prior_shape, .epp.env$priors.tau2_prior_rate)
 
 
     if (exists("r0logiotaratio", fp) && fp$r0logiotaratio)
@@ -542,19 +511,19 @@ ldsamp <- function(theta, fp){
 
   } else if (fp$eppmod == "rlogistic") {
     epp_nparam <- 5
-    lpr <- sum(dnorm(theta[1:4], rlog_pr_mean, rlog_pr_sd, log=TRUE))
+    lpr <- sum(dnorm(theta[1:4], .epp.env$priors.rlog_pr_mean, .epp.env$priors.rlog_pr_sd, log=TRUE))
     lpr <- lpr + ldsamp_iota(theta[5], fp)
   } else if (fp$eppmod == "rtrend"){ # rtrend
 
     epp_nparam <- 7
 
-    lpr <- dunif (round(theta[1]), t0.unif.prior[1], t0.unif.prior[2], log=TRUE) +
-      dnorm(round(theta[2]), t1.pr.mean, t1.pr.sd, log=TRUE) +
+    lpr <- dunif (round(theta[1]), .epp.env$priors.t0.unif.prior[1], .epp.env$priors.t0.unif.prior[2], log=TRUE) +
+      dnorm(round(theta[2]), .epp.env$priors.t1.pr.mean, .epp.env$priors.t1.pr.sd, log=TRUE) +
       dnorm(theta[3], logr0.pr.mean, logr0.pr.sd, log=TRUE) +
-      sum(dnorm(theta[4:7], rtrend.beta.pr.mean, rtrend.beta.pr.sd, log=TRUE))
+      sum(dnorm(theta[4:7], .epp.env$priors.rtrend.beta.pr.mean, .epp.env$priors.rtrend.beta.pr.sd, log=TRUE))
   } else if (fp$eppmod == "rhybrid"){
     epp_nparam <- fp$rt$n_param+1
-    lpr <- sum(dnorm(theta[1:4], rlog_pr_mean, rlog_pr_sd, log=TRUE)) +
+    lpr <- sum(dnorm(theta[1:4], .epp.env$priors.rlog_pr_mean, .epp.env$priors.rlog_pr_sd, log=TRUE)) +
       sum(dnorm(theta[4+1:fp$rt$n_rw], 0, rw_prior_sd, log=TRUE))
     lpr <- lpr + ldsamp_iota(theta[fp$rt$n_param+1], fp)
   }

@@ -29,9 +29,6 @@ prepare_logrw <- function(fp, tsEpidemicStart=fp$ss$time_epi_start+0.5) {
   return(fp)
 }
 
-rlog_pr_mean <- c(log(0.35), log(0.09), log(0.2), 1993)
-rlog_pr_sd <- c(0.5, 0.3, 0.5, 5)
-                
 rlogistic <- function(t, p) {
   ## p[1] = log r(0)    : log r(t) at the start of the epidemic (exponential growth)
   ## p[2] = log r(Inf)  : endemic value for log r(t)
@@ -186,11 +183,6 @@ extend_projection <- function(fit, proj_years) {
 # calc_rtrend_rt <- function(t, fp, rveclast, prevlast, pop, i, ii)
 # K moved to popClass method
 
-####  Model for iota  ####
-
-logiota.unif.prior <- log(c(1e-13, 0.0025))
-r0logiotaratio.unif.prior <- c(-25, -5)
-
 transf_iota <- function(par, fp) {
 
   if (exists("prior_args", where = fp)) {
@@ -199,7 +191,7 @@ transf_iota <- function(par, fp) {
   }
 
   if (exists("logitiota", fp) && fp$logitiota)
-    exp(invlogit(par)*diff(logiota.unif.prior) + logiota.unif.prior[1])
+		exp(invlogit(par)*diff(.epp.env$priors.logiota.unif.prior) + .epp.env$priors.logiota.unif.prior[1])
   else
     exp(par)  
 }
@@ -215,7 +207,7 @@ lprior_iota <- function(par, fp) {
   if (exists("logitiota", fp) && fp$logitiota)
     ldinvlogit(par)  # Note: parameter is defined on range logiota.unif.prior, so no need to check bound
   else
-    dunif (par, logiota.unif.prior[1], logiota.unif.prior[2], log=TRUE)
+    dunif (par, .epp.env$priors.logiota.unif.prior[1], .epp.env$priors.logiota.unif.prior[2], log=TRUE)
 }
 
 sample_iota <- function(n, fp) {
@@ -226,7 +218,7 @@ sample_iota <- function(n, fp) {
   if (exists("logitiota", fp) && fp$logitiota)
     return(logit(runif (n)))
   else
-    runif (n, logiota.unif.prior[1], logiota.unif.prior[2])
+		runif (n, .epp.env$priors.logiota.unif.prior[1], .epp.env$priors.logiota.unif.prior[2])
 }
 
 ldsamp_iota <- lprior_iota

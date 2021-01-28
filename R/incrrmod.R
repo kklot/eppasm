@@ -39,50 +39,11 @@ create_beers <- function(n5yr){
   return(round(A, 4))
 }
 
-
-################################################
-####  Prior for incidence rate ratio model  ####
-################################################
-
-## RW2 model
-NPARAM_RW2 <- 13
-
-sexincrr.pr.mean <- log(1.38)
-sexincrr.pr.sd <- 0.2
-
-mf_transm_rr.pr.mean <- log(1.9)
-mf_transm_rr.pr.sd <- 0.3  # change default to 0.3
-
-## ageincrr.pr.mean <- c(-1.40707274, -0.23518703, 0.69314718, 0.78845736, -0.39975544, -0.70620810, -0.84054571, -0.02101324, -0.16382449, -0.37914407, -0.59639985, -0.82038300)
-## ageincrr.pr.sd <- 0.5
-
-## Informative priors based on estimates for 11 countries with 3+ surveys
-ageincrr.pr.mean <- c(-1.4, -0.28, 0.3, 0.3, -0.3, -0.6, -0.2, 0.05, -0.4, -0.45, -0.6, -0.7)
-ageincrr.pr.sd <- c(0.5, 0.4, 0.23, 0.3, 0.3, 0.3, 0.3, 0.3, 0.2, 0.2, 0.2, 0.2)
-
-NPARAM_LININCRR <- 6
-## incrr_trend_mean <- c(0, 0, 0, 0, 0, 0)
-## incrr_trend_sd <- c(0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
-
-## Informative priors based on estimates for 11 countries with 3+ surveys
-incrr_trend_mean <- c(0.0, 0.035, -0.02, -0.09, -0.016, -0.06)
-incrr_trend_sd <- c(0.07, 0.07, 0.1, 0.1, 0.08, 0.08)
-
-## Incidence rate ratios for age 50 plus, relative to 15-49
-incrr_50plus_logdiff <- cbind(male   = log(0.493510) - log(c(0.358980, 0.282400, 0.259240, 0.264920, 0.254790, 0.164140, 0.000000)),
-                              female = log(0.440260) - log(c(0.336720, 0.239470, 0.167890, 0.146590, 0.171350, 0.000000, 0.000000)))
-
-## Beers coefficient matrix
-beers_Amat <- create_beers(17)[16:81, 4:17]
-beers_Amat[,] <- 0
-irc <- cbind(1:66, c(rep(1:13, each=5), 14))
-beers_Amat[irc] <- 1
-
 getnparam_incrr <- function(fp){
   value <- switch(as.character(fp$fitincrr),
                   "FALSE" = 0,
-                  "TRUE" = NPARAM_RW2,
-                  linincrr = NPARAM_RW2+NPARAM_LININCRR,
+                  "TRUE" = .epp.env$NPARAM_RW2,
+                  linincrr = .epp.env$NPARAM_RW2+.epp.env$NPARAM_LININCRR,
                   lognorm = 7,
                   kincrr = 25, 
                   relbehav = NPAR_RELBEHAV, NA)
@@ -110,18 +71,18 @@ transf_incrr <- function(theta_incrr, param, fp){
     
     param$logincrr_age <- array(0, c(14, 2))
     param$logincrr_age[c(1:2, 4:7), ] <- theta_incrr[2:13]
-    param$logincrr_age[8:14, ] <- sweep(-incrr_50plus_logdiff, 2,
+    param$logincrr_age[8:14, ] <- sweep(-.epp.env$incrr_50plus_logdiff, 2,
                                         param$logincrr_age[7, ], "+")
 
     ## Smooth 5-year age group IRRs to 1-year IRRs
-    incrr_age <- beers_Amat %*% exp(param$logincrr_age)
+    incrr_age <- .epp.env$beers_Amat %*% exp(param$logincrr_age)
     incrr_age[incrr_age < 0] <- 0
     
     param$incrr_age <- array(incrr_age, c(dim(incrr_age), fp$ss$PROJ_YEARS))
 
     years <- with(fp$ss, proj_start+1:PROJ_YEARS-1)
     if(fp$fitincrr == "linincrr"){
-      par <- theta_incrr[NPARAM_RW2+1:NPARAM_LININCRR]
+      par <- theta_incrr[.epp.env$NPARAM_RW2+1:.epp.env$NPARAM_LININCRR]
       param$logincrr_trend <- par
       sexadjust <- approx(c(2002, 2007, 2012), c(-5, 0, 5)*c(par[1], 0, par[2]), years, rule=2)$y
       if(fp$incidmod == "eppspectrum")
@@ -140,7 +101,7 @@ transf_incrr <- function(theta_incrr, param, fp){
                                 calc_lognorm_logagerr(theta_incrr[5:7]))
 
     ## Smooth 5-year age group IRRs to 1-year IRRs
-    incrr_age <- beers_Amat %*% exp(param$logincrr_age)
+    incrr_age <- .epp.env$beers_Amat %*% exp(param$logincrr_age)
     incrr_age[incrr_age < 0] <- 0
     
     param$incrr_age <- array(incrr_age, c(dim(incrr_age), fp$ss$PROJ_YEARS))
@@ -167,7 +128,7 @@ transf_incrr <- function(theta_incrr, param, fp){
     param$logincrr_age[14, ] <- -Inf
     param$logincrr_age[c(1:2, 4:13), ] <- theta_incrr[2:25]
     ## Smooth 5-year age group IRRs to 1-year IRRs
-    incrr_age <- beers_Amat %*% exp(param$logincrr_age)
+    incrr_age <- .epp.env$beers_Amat %*% exp(param$logincrr_age)
     incrr_age[incrr_age < 0] <- 0
     param$incrr_age <- array(incrr_age, c(dim(incrr_age), fp$ss$PROJ_YEARS))
   }
@@ -185,15 +146,15 @@ lprior_incrr <- function(theta_incrr, fp){
   lpr <- 0
   
   if(fp$incidmod == "eppspectrum")
-    lpr <- lpr + dnorm(theta_incrr[1], sexincrr.pr.mean, sexincrr.pr.sd, log=TRUE)
+    lpr <- lpr + dnorm(theta_incrr[1], .epp.env$sexincrr.pr.mean, .epp.env$sexincrr.pr.sd, log=TRUE)
   else if(fp$incidmod == "transm")
-    lpr <- lpr + dnorm(theta_incrr[1], mf_transm_rr.pr.mean, mf_transm_rr.pr.sd, log=TRUE)
+    lpr <- lpr + dnorm(theta_incrr[1], .epp.env$mf_transm_rr.pr.mean, .epp.env$mf_transm_rr.pr.sd, log=TRUE)
 
   if(fp$fitincrr %in% c(TRUE, "linincrr")){
-    lpr <- lpr + sum(dnorm(theta_incrr[2:13], ageincrr.pr.mean, ageincrr.pr.sd, log=TRUE))
+    lpr <- lpr + sum(dnorm(theta_incrr[2:13], .epp.env$ageincrr.pr.mean, .epp.env$ageincrr.pr.sd, log=TRUE))
 
     if(fp$fitincrr == "linincrr"){
-      lpr <- lpr+sum(dnorm(theta_incrr[NPARAM_RW2+1:NPARAM_LININCRR], incrr_trend_mean, incrr_trend_sd, log=TRUE))
+      lpr <- lpr+sum(dnorm(theta_incrr[.epp.env$NPARAM_RW2+1:.epp.env$NPARAM_LININCRR], .epp.env$incrr_trend_mean, .epp.env$incrr_trend_sd, log=TRUE))
     }
 
     } else if(fp$fitincrr=="lognorm"){
@@ -222,15 +183,15 @@ sample_incrr <- function(n, fp){
   mat <- matrix(NA, n, incrr_nparam)
   
   if(fp$incidmod == "eppspectrum")
-    mat[,1] <- rnorm(n, sexincrr.pr.mean, sexincrr.pr.sd)
+    mat[,1] <- rnorm(n, .epp.env$sexincrr.pr.mean, .epp.env$sexincrr.pr.sd)
   else if(fp$incidmod == "transm")
-    mat[,1] <- rnorm(n, mf_transm_rr.pr.mean, mf_transm_rr.pr.sd)
+    mat[,1] <- rnorm(n, .epp.env$mf_transm_rr.pr.mean, .epp.env$mf_transm_rr.pr.sd)
   
   if(fp$fitincrr %in% c(TRUE, "linincrr")){
-    mat[,2:13] <- t(matrix(rnorm(n*12, ageincrr.pr.mean, ageincrr.pr.sd), nrow=12))
+    mat[,2:13] <- t(matrix(rnorm(n*12, .epp.env$ageincrr.pr.mean, .epp.env$ageincrr.pr.sd), nrow=12))
     ## mat[,14] <- rnorm(n, -1, 0.7)  # log variance of ageincrr difference penalty
     if(fp$fitincrr == "linincrr")
-      mat[,NPARAM_RW2+1:NPARAM_LININCRR] <- t(matrix(rnorm(n*NPARAM_LININCRR, incrr_trend_mean, incrr_trend_sd), nrow=NPARAM_LININCRR))
+      mat[,.epp.env$NPARAM_RW2+1:.epp.env$NPARAM_LININCRR] <- t(matrix(rnorm(n*.epp.env$NPARAM_LININCRR, .epp.env$incrr_trend_mean, .epp.env$incrr_trend_sd), nrow=.epp.env$NPARAM_LININCRR))
   } else if(fp$fitincrr=="lognorm"){
     mat[,c(2,5)] <- t(matrix(rnorm(n*2, lognorm.a0.pr.mean, lognorm.a0.pr.sd), nrow=2))
     mat[,c(3,6)] <- t(matrix(rnorm(n*2, lognorm.meanlog.pr.mean, lognorm.meanlog.pr.sd), nrow=2))
