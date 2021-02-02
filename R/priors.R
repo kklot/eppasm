@@ -33,10 +33,10 @@ epp.get <- function(name) {
 #' @export
 epp.ls <- function() {
 	if (exists(".epp.env") && is.environment(.epp.env))
-		return(names(.epp.env))
+		return(sort(names(.epp.env)))
 }
 
-# r(t) priors
+# r(t) prior
 epp.set('priors.rlog_pr_mean', c(log(0.35), log(0.09), log(0.2), 1980))
 epp.set('priors.rlog_pr_sd', c(0.5, 0.3, 0.5, 10))
 
@@ -109,13 +109,14 @@ epp.set("incrr_50plus_logdiff",
 
 ## Beers coefficient matrix
 epp.set("beers_Amat", create_beers(17)[16:81, 4:17])
+epp.set("sigma_agepen", 0.1)
 
 .epp.env.original <- .epp.env
 #' Reset eppasm options, such as priors
 #'
 #' @export
-epp.reset <- function(name, value) {
+epp.reset <- function() {
 	for (name in names(.epp.env.original))
-		.epp.env[[name]]  <- .epp.env.original[[name]]
+		.epp.env[[name]] <<- .epp.env.original[[name]]
 }
 

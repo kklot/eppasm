@@ -64,11 +64,8 @@ transf_incrr <- function(theta_incrr, param, fp){
   }
 
   if(fp$fitincrr %in% c(TRUE ,"linincrr")){
-
     ## param$sigma_agepen <- exp(theta_incrr[incrr_nparam])
-    param$sigma_agepen <- 0.4
-
-    
+    param$sigma_agepen <- .epp.env$sigma_agepen
     param$logincrr_age <- array(0, c(14, 2))
     param$logincrr_age[c(1:2, 4:7), ] <- theta_incrr[2:13]
     param$logincrr_age[8:14, ] <- sweep(-.epp.env$incrr_50plus_logdiff, 2,
@@ -95,7 +92,6 @@ transf_incrr <- function(theta_incrr, param, fp){
       f15to24_adjust <- approx(c(2002, 2007, 2012), c(-5, 0, 5)*c(par[5], 0, par[6]), years, rule=2)$y
       param$incrr_age[1:10,,] <- sweep(param$incrr_age[1:10,,,drop=FALSE], 2:3, exp(rbind(m15to24_adjust, f15to24_adjust)), "*")      
     }
-
   } else if(fp$fitincrr=="lognorm"){
     param$logincrr_age <- cbind(calc_lognorm_logagerr(theta_incrr[2:4]),
                                 calc_lognorm_logagerr(theta_incrr[5:7]))
@@ -144,12 +140,16 @@ lprior_incrr <- function(theta_incrr, fp){
   }
 
   lpr <- 0
-  
+	#   Male-female ratio
   if(fp$incidmod == "eppspectrum")
-    lpr <- lpr + dnorm(theta_incrr[1], .epp.env$sexincrr.pr.mean, .epp.env$sexincrr.pr.sd, log=TRUE)
+    lpr <- lpr + dnorm(theta_incrr[1], 
+											 .epp.env$sexincrr.pr.mean,
+											 .epp.env$sexincrr.pr.sd, log=TRUE)
   else if(fp$incidmod == "transm")
-    lpr <- lpr + dnorm(theta_incrr[1], .epp.env$mf_transm_rr.pr.mean, .epp.env$mf_transm_rr.pr.sd, log=TRUE)
-
+    lpr <- lpr + dnorm(theta_incrr[1], 
+											 .epp.env$mf_transm_rr.pr.mean,
+											 .epp.env$mf_transm_rr.pr.sd, log=TRUE)
+	#   Age ratio
   if(fp$fitincrr %in% c(TRUE, "linincrr")){
     lpr <- lpr + sum(dnorm(theta_incrr[2:13], .epp.env$ageincrr.pr.mean, .epp.env$ageincrr.pr.sd, log=TRUE))
 

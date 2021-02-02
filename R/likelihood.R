@@ -87,10 +87,10 @@ fnCreateParam <- function(theta, fp){
 
   if(exists("fitincrr", where=fp)){
     incrr_nparam <- getnparam_incrr(fp)
-    if(incrr_nparam) {
+    if (incrr_nparam) {
       anc_np <- ifelse(!is.null(fp$ancmod$nparam), fp$ancmod$nparam, 0)
-      cols <- (epp_nparam+anc_np) + 1:incrr_nparam
-      param <- transf_incrr(theta[cols], param, fp)
+      cols   <- (epp_nparam+anc_np) + 1:incrr_nparam
+      param  <- transf_incrr(theta[cols], param, fp)
     }
   }
 
@@ -330,7 +330,7 @@ lgt_sample <- function() {
 #' @importFrom stats aggregate approx cov cov.wt density dexp dlnorm dnorm dunif ecdf mahalanobis median model.matrix na.omit optim optimHess pnorm qnorm quantile relevel rexp rgamma rnorm runif sd setNames update var
 ll_all = function(theta, fp, likdat) {
 
-  theta.last <<- theta
+  .epp.env$theta.last <<- theta
 
   nparam <- length(theta)
   
