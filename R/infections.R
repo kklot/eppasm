@@ -16,20 +16,31 @@ infectFns <- c(
 infect_mix = function(hivpop, artpop, ii) {
     ts <- (year-2)/DT + ii
     update_active_pop_to(year)
-    
+		# calculate and distribute relative infection by CD4 stages
+		rel_vl <- c(1,rep(.5,5),1)                                                                                  # rel reduction by 7 cd4 stages
+		N1 <- colSums(artpop$data[,,,,year],,2) + colSums(hivpop$data[,,,year])                                     # active hiv+ by age group
+		N1 <- sapply(1:2, function(x) rep(N1[, x], h.ag.span))                                                      # spread age-group to single age
+		N1[which(N1==0, TRUE)] <- 1                                                                                 # no infection cases
+		N2 <- colSums(sweepx(artpop$data[,,,,year],2,rel_vl),,2) + colSums(sweepx(hivpop$data[,,,year], 1, rel_vl)) # active hiv+ by age group reduced
+		N2 <- sapply(1:2, function(x) rep(N2[, x], h.ag.span))                                                      # spread to single age
+		PP <- data_active[,,hivp.idx]/N1                                                                            # proportion each age to their age-group
+		hiv_cd4_adj<- N2 * PP                                                                                       # hiv+ active adjusted for relative infection compare to first stage
     data_active <<- sweepx(data_active, 1:2, p$est_senesence)
     # sweep over sexual mixing matrices, this results in the number of partnerships
     # this is not depended on model parameters and could be sped up
-    nc_m <- sweepx(p$mixmat[,,m.idx], 1, 1+p$est_pcr[, 1])
-    nc_f <- sweepx(p$mixmat[,,f.idx], 1, 1+p$est_pcr[, 2])
+    nc_m <- sweepx(p$mixmat[,,m.idx], 1, p$est_pcr[, 1])
+    nc_f <- sweepx(p$mixmat[,,f.idx], 1, p$est_pcr[, 2])
 		# get the total numner of partnerships formed by HIV negative population
-    nc_m_total <- sweepx(nc_m, 1, data_active[, m.idx, hivn.idx])
-    nc_f_total <- sweepx(nc_f, 1, data_active[, f.idx, hivn.idx])
+    nc_m_total <- sweepx(nc_m, 1, rowSums(data_active[, m.idx, ]))
+    nc_f_total <- sweepx(nc_f, 1, rowSums(data_active[, f.idx, ]))
 		# the balancing ratio
     ratio_mf <- nc_m_total / t(nc_f_total)
     # adjusted number of partnerships
     nc_m_adj <- nc_m / ratio_mf^0.5
     nc_f_adj <- nc_f * t(ratio_mf)^0.5
+    # adjusted number of partnerships
+    nc_m_adj <- sweepx(nc_m_adj, 1, data_active[,m.idx,hivn.idx]/rowSums(data_active[,m.idx,]))
+    nc_f_adj <- sweepx(nc_f_adj, 1, data_active[,f.idx,hivn.idx]/rowSums(data_active[,f.idx,]))
 		# at this point we have the number of partnerships in each age combinations
     art_cov <- matrix(0, pAG, NG)
     if (year >= p$tARTstart) {
@@ -40,22 +51,18 @@ infect_mix = function(hivpop, artpop, ii) {
 				art_cov[which(is.nan( art_cov ), TRUE)] <- 0
       art_cov <- sapply(1:2, function(x) rep(art_cov[, x], h.ag.span))
     }
-    hiv_treated       <- data_active[,,hivp.idx] * art_cov
-    hiv_not_treated   <- data_active[,,hivp.idx] - hiv_treated
-    transm_prev <- (hiv_not_treated + hiv_treated * (1 - p$relinfectART)) / 
-                    rowSums(data_active,,2) # prevalence adjusted for art
+		transm_prev <- hiv_cd4_adj * (1 - art_cov * p$relinfectART) / rowSums(data_active,,2) # prevalence adjusted for art
     # other one is "transm"
     sex_factor = ifelse(p$incidmod == "eppspectrum", p$incrr_sex[year], p$mf_transm_rr[year])
-    if (p$proj.steps[ts] == p$tsEpidemicStart) 
+    if (p$proj.steps[ts] == p$tsEpidemicStart)
       transm_prev <- sweep(transm_prev, 2, p$iota * c(1, sqrt(sex_factor)), '+')
+		# x age pattern by sex
+		transm_prev <- transm_prev * p$incrr_age[,,year]
 		# r(t) x HIV prevalence
     inc_r <- rvec[ts] * sweepx(transm_prev, 2, c(sex_factor, 1))
 		# x contact rate adjusted
     inc_m <- sweepx(nc_m_adj, 2, inc_r[, f.idx])
     inc_f <- sweepx(nc_f_adj, 2, inc_r[, m.idx])
-		# x age pattern by sex
-    inc_m <- sweepx(inc_m, 1, p$incrr_age[, m.idx,year])
-    inc_f <- sweepx(inc_f, 1, p$incrr_age[, f.idx,year])
 		# x reduction using condom in men
     inc_m <- sweepx(inc_m, 1, 1-p$est_condom[, m.idx, year])
     inc_f <- sweepx(inc_f, 2, 1-p$est_condom[, m.idx, year])

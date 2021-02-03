@@ -89,6 +89,7 @@ struct IncidenceParam {
   const double   relinfectART;
   const double * incrr_sex;
   const double * mf_transm_rr;
+  const double * rel_vl;
   boost2D_ptr    fage;
   double         circ_incid_rr;
   const double * incidinput;
