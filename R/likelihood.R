@@ -348,7 +348,7 @@ ll_all = function(theta, fp, likdat) {
     if (fp$fitincrr==TRUE)
       .incpen <- sum(dnorm(diff(fp$logincrr_age[1:7, ], differences=2), sd=fp$sigma_agepen, log=TRUE))
     if (fp$fitincrr=="kincrr")
-      .incpen <- sum(dnorm(diff(fp$logincrr_age[1:13, ], differences=2), sd=fp$sigma_agepen, log=TRUE))
+			.incpen <- sum(dnorm(diff(fp$incrr_age[,,1], differences=2), sd=fp$sigma_agepen, log=TRUE))
   }
 
   ## ANC likelihood

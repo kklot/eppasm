@@ -111,6 +111,9 @@ epp.set("incrr_50plus_logdiff",
 epp.set("beers_Amat", create_beers(17)[16:81, 4:17])
 epp.set("sigma_agepen", 0.1)
 
+# kincrr
+epp.set('kincrr.mean', 1)
+epp.set('kincrr.sd', .5)
 .epp.env.original <- .epp.env
 #' Reset eppasm options, such as priors
 #'

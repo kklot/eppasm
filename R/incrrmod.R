@@ -41,11 +41,11 @@ create_beers <- function(n5yr){
 
 getnparam_incrr <- function(fp){
   value <- switch(as.character(fp$fitincrr),
-                  "FALSE" = 0,
-                  "TRUE" = .epp.env$NPARAM_RW2,
+                  "FALSE"  = 0,
+                  "TRUE"   = .epp.env$NPARAM_RW2,
                   linincrr = .epp.env$NPARAM_RW2+.epp.env$NPARAM_LININCRR,
-                  lognorm = 7,
-                  kincrr = 25, 
+                  lognorm  = 7,
+                  kincrr   = 1+2*length(16:60),
                   relbehav = NPAR_RELBEHAV, NA)
   if(is.na(value))
     stop(paste0("fitincrr model '", fp$fitincrr, "' is not recognized"))
@@ -53,30 +53,24 @@ getnparam_incrr <- function(fp){
 }
 
 transf_incrr <- function(theta_incrr, param, fp){
-
   incrr_nparam <- getnparam_incrr(fp)
-  
   if(fp$incidmod == "eppspectrum"){
     param$incrr_sex <- fp$incrr_sex
     param$incrr_sex[] <- exp(theta_incrr[1])
   } else if(fp$incidmod == "transm") {
     param$mf_transm_rr <- rep(exp(theta_incrr[1]), fp$ss$PROJ_YEARS)
   }
-
   if(fp$fitincrr %in% c(TRUE ,"linincrr")){
     ## param$sigma_agepen <- exp(theta_incrr[incrr_nparam])
     param$sigma_agepen <- .epp.env$sigma_agepen
     param$logincrr_age <- array(0, c(14, 2))
     param$logincrr_age[c(1:2, 4:7), ] <- theta_incrr[2:13]
-    param$logincrr_age[8:14, ] <- sweep(-.epp.env$incrr_50plus_logdiff, 2,
-                                        param$logincrr_age[7, ], "+")
-
+		param$logincrr_age[8:14, ] <- sweep(-.epp.env$incrr_50plus_logdiff, 2,
+																				param$logincrr_age[7, ], "+")
     ## Smooth 5-year age group IRRs to 1-year IRRs
     incrr_age <- .epp.env$beers_Amat %*% exp(param$logincrr_age)
     incrr_age[incrr_age < 0] <- 0
-    
     param$incrr_age <- array(incrr_age, c(dim(incrr_age), fp$ss$PROJ_YEARS))
-
     years <- with(fp$ss, proj_start+1:PROJ_YEARS-1)
     if(fp$fitincrr == "linincrr"){
       par <- theta_incrr[.epp.env$NPARAM_RW2+1:.epp.env$NPARAM_LININCRR]
@@ -95,38 +89,19 @@ transf_incrr <- function(theta_incrr, param, fp){
   } else if(fp$fitincrr=="lognorm"){
     param$logincrr_age <- cbind(calc_lognorm_logagerr(theta_incrr[2:4]),
                                 calc_lognorm_logagerr(theta_incrr[5:7]))
-
     ## Smooth 5-year age group IRRs to 1-year IRRs
     incrr_age <- .epp.env$beers_Amat %*% exp(param$logincrr_age)
     incrr_age[incrr_age < 0] <- 0
-    
     param$incrr_age <- array(incrr_age, c(dim(incrr_age), fp$ss$PROJ_YEARS))
-
   } else if(fp$fitincrr == "relbehav"){
-
     stop("relbehav is not implemented currently")
-    
-    ## par <- theta_incrr[2:incrr_nparam]
-    ## param$adjustpar <- par
-    ## logadjust1 <- cbind(approx(c(17, 27, 38, 49), c(par[1], 0, cumsum(par[2:3])), xout=15:80, rule=2)$y,
-    ##                     approx(c(17, 27, 38, 49), c(par[4], 0, cumsum(par[5:6])), xout=15:80, rule=2)$y)
-    
-    ## logadjust2 <- cbind(approx(c(17, 27, 38, 49), c(par[1]+par[7], 0, cumsum(par[2:3])), xout=15:80, rule=2)$y,
-    ##                     approx(c(17, 27, 38, 49), c(par[4]+par[8], 0, cumsum(par[5:6])), xout=15:80, rule=2)$y)
-    
-    ## BREAK_YEAR <- 36
-    ## param$incrr_age <- fp$logrelbehav
-    ## param$incrr_age[,,1:(BREAK_YEAR-1)] <- exp(sweep(fp$logrelbehav[,,1:(BREAK_YEAR-1)], 1:2, logadjust1, "+"))
-    ## param$incrr_age[,,BREAK_YEAR:fp$SIM_YEARS] <- exp(sweep(fp$logrelbehav[,,BREAK_YEAR:fp$SIM_YEARS], 1:2, logadjust2, "+"))
   } else if (fp$fitincrr=="kincrr") {
-    param$sigma_agepen <- 0.4
-    param$logincrr_age <- array(0, c(14, 2))
-    param$logincrr_age[14, ] <- -Inf
-    param$logincrr_age[c(1:2, 4:13), ] <- theta_incrr[2:25]
-    ## Smooth 5-year age group IRRs to 1-year IRRs
-    incrr_age <- .epp.env$beers_Amat %*% exp(param$logincrr_age)
+    param$sigma_agepen       <- .epp.env$sigma_agepen
+    incrr_age                <- array(1, c(66, 2))
+    incrr_age[a2i(61:80), ]  <- 0
+    incrr_age[a2i(16:60), ]  <- theta_incrr[2:(1+2*length(16:60))]
     incrr_age[incrr_age < 0] <- 0
-    param$incrr_age <- array(incrr_age, c(dim(incrr_age), fp$ss$PROJ_YEARS))
+    param$incrr_age          <- array(incrr_age, c(dim(incrr_age), fp$ss$PROJ_YEARS))
   }
  
   return(param)
@@ -150,25 +125,22 @@ lprior_incrr <- function(theta_incrr, fp){
 											 .epp.env$mf_transm_rr.pr.mean,
 											 .epp.env$mf_transm_rr.pr.sd, log=TRUE)
 	#   Age ratio
-  if(fp$fitincrr %in% c(TRUE, "linincrr")){
-    lpr <- lpr + sum(dnorm(theta_incrr[2:13], .epp.env$ageincrr.pr.mean, .epp.env$ageincrr.pr.sd, log=TRUE))
-
-    if(fp$fitincrr == "linincrr"){
-      lpr <- lpr+sum(dnorm(theta_incrr[.epp.env$NPARAM_RW2+1:.epp.env$NPARAM_LININCRR], .epp.env$incrr_trend_mean, .epp.env$incrr_trend_sd, log=TRUE))
-    }
-
-    } else if(fp$fitincrr=="lognorm"){
-      lpr <- lpr +
-        sum(dnorm(theta_incrr[c(2,5)], lognorm.a0.pr.mean, lognorm.a0.pr.sd, log=TRUE)) +
-        sum(dnorm(theta_incrr[c(3,6)], lognorm.meanlog.pr.mean, lognorm.meanlog.pr.sd, log=TRUE)) +
-        sum(dnorm(theta_incrr[c(4,7)], lognorm.logsdlog.pr.mean, lognorm.logsdlog.pr.sd, log=TRUE))
-    } else if(fp$fitincrr=="relbehav"){
-      lpr <- lpr + sum(dnorm(theta_incrr[2:NPAR_RELBEHAV], 0, relbehav_adjust_sd, log=TRUE));
-    } else if(fp$fitincrr=="kincrr") {
-      lpr <- lpr + 
-        sum(dnorm(theta_incrr[c(2L:11, 14:23)], 0, 0.2, log=TRUE)) +
-        sum(dbeta(exp(theta_incrr[c(12:13, 24:25)]), 1, 005, log=TRUE))
-    }
+	if(fp$fitincrr %in% c(TRUE, "linincrr")){
+		lpr <- lpr + sum(dnorm(theta_incrr[2:13], .epp.env$ageincrr.pr.mean, .epp.env$ageincrr.pr.sd, log=TRUE))
+		if(fp$fitincrr == "linincrr")
+			lpr <- lpr + sum(dnorm(theta_incrr[.epp.env$NPARAM_RW2+1:.epp.env$NPARAM_LININCRR], 
+														 .epp.env$incrr_trend_mean,
+														 .epp.env$incrr_trend_sd, log=TRUE))
+	} else if(fp$fitincrr=="lognorm"){
+		lpr <- lpr +
+			sum(dnorm(theta_incrr[c(2,5)], lognorm.a0.pr.mean, lognorm.a0.pr.sd, log=TRUE)) +
+			sum(dnorm(theta_incrr[c(3,6)], lognorm.meanlog.pr.mean, lognorm.meanlog.pr.sd, log=TRUE)) +
+			sum(dnorm(theta_incrr[c(4,7)], lognorm.logsdlog.pr.mean, lognorm.logsdlog.pr.sd, log=TRUE))
+	} else if(fp$fitincrr=="relbehav") {
+		lpr <- lpr + sum(dnorm(theta_incrr[2:NPAR_RELBEHAV], 0, relbehav_adjust_sd, log=TRUE));
+	} else if(fp$fitincrr=="kincrr") {
+		lpr <- lpr + sum(dnorm(theta_incrr[2:(1+length(16:60)*2)], .epp.env$kincrr.mean, .epp.env$kincrr.sd, log=TRUE))
+	} 
 
   return(lpr)
 }
@@ -200,13 +172,8 @@ sample_incrr <- function(n, fp){
     incrr_nparam <- NPAR_RELBEHAV
     mat[,2:NPAR_RELBEHAV] <- rnorm(n*(NPAR_RELBEHAV-1), 0, relbehav_adjust_sd)
   } else if(fp$fitincrr=="kincrr") {
-    nrw <- incrr_nparam-1
-    mat[,2L:11] <- rnorm(n*10, 0, 0.2)
-    mat[,12:13] <- log(rbeta(n*2, 1, 5))
-    mat[,14:23] <- rnorm(n*10, 0, 0.2)
-    mat[,24:25] <- log(rbeta(n*2, 1, 5))
-  }
-
+		mat[,2:incrr_nparam] <- rnorm(n*(incrr_nparam-1), .epp.env$kincrr.mean, .epp.env$kincrr.sd)
+  } 
   return(mat)
 }
 
