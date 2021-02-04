@@ -325,6 +325,15 @@ lgt_sample <- function() {
     )
 }
 
+ll_spline <- function(theta, 
+											Q       = .epp.env$spline.Q,
+											penalty = .epp.env$spline.penalty,
+											N       = .epp.env$spline.n) {
+	2 * 0.5 * N  * log(penalty) - 
+		0.5 * penalty * theta[1:N] %*% (Q %*% theta[1:N]) - 
+		0.5 * penalty * theta[1:N+N] %*% (Q %*% theta[1:N+N])
+}
+
 #' Full log-likelhood
 #' 
 #' @importFrom stats aggregate approx cov cov.wt density dexp dlnorm dnorm dunif ecdf mahalanobis median model.matrix na.omit optim optimHess pnorm qnorm quantile relevel rexp rgamma rnorm runif sd setNames update var
@@ -349,6 +358,8 @@ ll_all = function(theta, fp, likdat) {
       .incpen <- sum(dnorm(diff(fp$logincrr_age[1:7, ], differences=2), sd=fp$sigma_agepen, log=TRUE))
     if (fp$fitincrr=="kincrr")
 			.incpen <- sum(dnorm(diff(fp$incrr_age[,,1], differences=2), sd=fp$sigma_agepen, log=TRUE))
+		if (fp$fitincrr=="spline")
+			.incpen <- ll_spline(fp$spline.coef)
   }
 
   ## ANC likelihood

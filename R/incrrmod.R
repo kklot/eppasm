@@ -46,6 +46,7 @@ getnparam_incrr <- function(fp){
                   linincrr = .epp.env$NPARAM_RW2+.epp.env$NPARAM_LININCRR,
                   lognorm  = 7,
                   kincrr   = 1+2*length(16:60),
+                  spline   = 1+.epp.env$spline.n*2,
                   relbehav = NPAR_RELBEHAV, NA)
   if(is.na(value))
     stop(paste0("fitincrr model '", fp$fitincrr, "' is not recognized"))
@@ -102,9 +103,16 @@ transf_incrr <- function(theta_incrr, param, fp){
     incrr_age[a2i(16:60), ]  <- theta_incrr[2:(1+2*length(16:60))]
     incrr_age[incrr_age < 0] <- 0
     param$incrr_age          <- array(incrr_age, c(dim(incrr_age), fp$ss$PROJ_YEARS))
-  }
- 
+  } else if (fp$fitincrr=="spline") {
+    incrr_age         <- exp(spline_predict(theta_incrr[-1]))
+    param$incrr_age   <- array(incrr_age, c(dim(incrr_age), fp$ss$PROJ_YEARS))
+		param$spline.coef <- theta_incrr[-1]
+	}
   return(param)
+}
+
+spline_predict <- function(theta, X = .epp.env$spline.X, npar = .epp.env$spline.n) {
+		cbind(X %*% theta[1:npar], X %*% theta[(npar+1):(npar*2)])
 }
 
 lprior_incrr <- function(theta_incrr, fp){
@@ -140,7 +148,9 @@ lprior_incrr <- function(theta_incrr, fp){
 		lpr <- lpr + sum(dnorm(theta_incrr[2:NPAR_RELBEHAV], 0, relbehav_adjust_sd, log=TRUE));
 	} else if(fp$fitincrr=="kincrr") {
 		lpr <- lpr + sum(dnorm(theta_incrr[2:(1+length(16:60)*2)], .epp.env$kincrr.mean, .epp.env$kincrr.sd, log=TRUE))
-	} 
+	} else if(fp$fitincrr=="spline") {
+		lpr <- lpr + sum(dnorm(theta_incrr[-1], .epp.env$spline.mean, .epp.env$spline.stdv, log=TRUE))
+	}
 
   return(lpr)
 }
@@ -173,7 +183,10 @@ sample_incrr <- function(n, fp){
     mat[,2:NPAR_RELBEHAV] <- rnorm(n*(NPAR_RELBEHAV-1), 0, relbehav_adjust_sd)
   } else if(fp$fitincrr=="kincrr") {
 		mat[,2:incrr_nparam] <- rnorm(n*(incrr_nparam-1), .epp.env$kincrr.mean, .epp.env$kincrr.sd)
-  } 
+  } else if(fp$fitincrr=="spline") {
+		mat[,2:incrr_nparam] <- rnorm(n*(incrr_nparam-1), .epp.env$spline.mean, .epp.env$spline.stdv)
+  }
+
   return(mat)
 }
 

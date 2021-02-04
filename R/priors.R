@@ -114,6 +114,17 @@ epp.set("sigma_agepen", 0.1)
 # kincrr
 epp.set('kincrr.mean', 1)
 epp.set('kincrr.sd', .5)
+# Spline
+.epp.env$gamS <- mgcv::gam(rr ~ -1 + s(age, bs = 'ts', pc=60),
+													 data=data.frame(rr=1, age=15:80), fit=FALSE)
+epp.set("spline.Q", .epp.env$gamS$smooth[[1]]$S[[1]])
+epp.set("spline.X", .epp.env$gamS$X)
+.epp.env$spline.X[60:80-14, ] <- 1e-14
+epp.set("spline.n", nrow(.epp.env$spline.Q))
+epp.set("spline.penalty", .1)
+epp.set("spline.mean", 0)
+epp.set("spline.stdv", 1)
+
 .epp.env.original <- .epp.env
 #' Reset eppasm options, such as priors
 #'
