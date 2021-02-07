@@ -136,7 +136,6 @@ epp_optim <- function(epp=FALSE, fp, likdat, control_optim, B0, B.re, doParallel
     lpost0 = eppasm:::likelihood(X0, fp, likdat, log=TRUE, doParallel) + 
              eppasm:::prior(X0, fp, log=TRUE)
     .control.optim$par = X0[which.max(lpost0)[1], ]
-    cat('best MAP', .control.optim$par, -max(lpost0), '\r')
   }
   .control.optim$control$ndeps <- rep(1e-4, length(.control.optim$par))
   .control.optim <- modifyList(.control.optim, list(fp = fp, likdat = likdat))
