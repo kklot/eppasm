@@ -90,6 +90,8 @@ fp_fill_missing <- function(fp) { # need further checks
       fp$targetpop <- array(0, c(1,1,1))
       fp$entrantpop <- array(0, c(1,1))
   }
+  if (!exists("rel_vl", where=fp))
+      fp$rel_vl <- c(1, rep(.4, 5), .8)
   if (!exists("mf_transm_rr", where=fp))
       fp$mf_transm_rr <- fp$incrr_sex
   if (!exists("balancing", where=fp))

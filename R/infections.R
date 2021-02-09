@@ -17,11 +17,10 @@ infect_mix = function(hivpop, artpop, ii) {
     ts <- (year-2)/DT + ii
     update_active_pop_to(year)
 		# calculate and distribute relative infection by CD4 stages
-		rel_vl <- c(1,rep(.5,5),1)                                                                                  # rel reduction by 7 cd4 stages
 		N1 <- colSums(artpop$data[,,,,year],,2) + colSums(hivpop$data[,,,year])                                     # active hiv+ by age group
 		N1 <- sapply(1:2, function(x) rep(N1[, x], h.ag.span))                                                      # spread age-group to single age
 		N1[which(N1==0, TRUE)] <- 1                                                                                 # no infection cases
-		N2 <- colSums(sweepx(artpop$data[,,,,year],2,rel_vl),,2) + colSums(sweepx(hivpop$data[,,,year], 1, rel_vl)) # active hiv+ by age group reduced
+		N2 <- colSums(sweepx(artpop$data[,,,,year],2,p$rel_vl),,2) + colSums(sweepx(hivpop$data[,,,year], 1, p$rel_vl)) # active hiv+ by age group reduced
 		N2 <- sapply(1:2, function(x) rep(N2[, x], h.ag.span))                                                      # spread to single age
 		PP <- data_active[,,hivp.idx]/N1                                                                            # proportion each age to their age-group
 		hiv_cd4_adj<- N2 * PP                                                                                       # hiv+ active adjusted for relative infection compare to first stage
