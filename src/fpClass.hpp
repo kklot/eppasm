@@ -85,6 +85,7 @@ struct IncidenceParam {
   boost3D_ptr    est_condom;
   boost2D_ptr    est_senesence;
   boost2D_ptr    est_pcr;
+  boost2D_ptr    leading_ev;
   const double   balancing;
   const double   relinfectART;
   const double * incrr_sex;

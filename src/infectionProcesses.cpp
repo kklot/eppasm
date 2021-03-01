@@ -199,17 +199,10 @@ void popC::infect_mix (hivC& hivpop, artC& artpop, int ii, Views& v, const Param
   // only two modes: "eppspectrum"=0 or "transm"=1
   double sex_factor = (p.ic.incidmod == 0) ? p.ic.incrr_sex[s.year] : p.ic.mf_transm_rr[s.year];
   //+intervention effects and time epidemic start
-  if (p.ic.proj_steps[ts] == p.ic.tsEpidemicStart) {
-    for (int age = 0; age < s.pAG; ++age) {
-      transm_prev[s.M][age] += p.ic.iota;
-      transm_prev[s.F][age] += p.ic.iota * pow(sex_factor, 0.5);
-    }    
-  } 
-	/* the incrr is acting as transm on the prevalence (column) not susceptible (row) */
-	for (int age = 0; age < s.pAG; ++age) {
-		transm_prev[s.M][age] *= p.ic.incrr_age[s.year][s.M][age];
-		transm_prev[s.F][age] *= p.ic.incrr_age[s.year][s.F][age];
-	}    
+  if (p.ic.proj_steps[ts] == p.ic.tsEpidemicStart)
+    for (int sex = 0; sex < s.NG; ++sex) 
+      for (int age = 0; age < s.pAG; ++age)
+        transm_prev[sex][age] = p.ic.leading_ev[sex][age] * p.ic.iota;
 
   multiply_with_inplace(transm_prev, rvec[ts]);
   for (int age = 0; age < s.pAG; ++age)

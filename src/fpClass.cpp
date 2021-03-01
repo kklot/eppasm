@@ -68,6 +68,7 @@ IncidenceParam::IncidenceParam(const SEXP& fp) :
     est_condom    ( REAL(get_value(fp, "est_condom")), get_dim_3D(fp, "est_condom")),
     est_senesence ( REAL(get_value(fp, "est_senesence")), get_dim_2D(fp, "est_senesence")),
     est_pcr       ( REAL(get_value(fp, "est_pcr")), get_dim_2D(fp, "est_pcr")),
+    leading_ev    ( REAL(get_value(fp, "leading_ev")), get_dim_2D(fp, "leading_ev")),
     balancing     (*REAL(get_value(fp, "balancing"))),
     relinfectART  (*REAL(get_value(fp, "relinfectART"))),
     incrr_sex     ( REAL(get_value(fp, "incrr_sex"))),

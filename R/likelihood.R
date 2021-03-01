@@ -93,9 +93,58 @@ fnCreateParam <- function(theta, fp){
       param  <- transf_incrr(theta[cols], param, fp)
     }
   }
+  if (fp$ss$MODEL == 2)
+    param$leading_ev <- NGM(fp$basepop, fp$db_rate[,,1], fp$mixmat,
+                            param$incrr_age[,,1], 1-fp$Sx[,,1],
+                            param$mf_transm_rr[[1]], param$rvec[1])
 
   return(param)
 }
+
+#' Next generation matrix for the sexual mixing model
+#'
+#' this is simplified as the absolute size is not important to the relative size
+#'
+#' @param base_pop initial population
+#' @param debut_rate sexual debut rate, need to adjust to included in F?
+#' @param mixing_matrice 3-dimensions array size 66x66x2
+#' @param partner_rate partner acquisition rate
+#' @param death_rate mortality rate, currently using 1-survival
+#' @param male_female_rate relative male to female transmission compared to other way around (not important)
+#' @param rt_0 initial growth rate of the r_t model (not important)
+#' @export 
+NGM <- function(base_pop, debut_rate, mixing_matrice, partner_rate, death_rate, male_female_rate, rt_0) {
+	base_pop[1:16, ] = base_pop[1:16, ] * debut_rate
+  nc_m <- sweepx(mixing_matrice[,,1], 1, partner_rate[, 1])
+  nc_f <- sweepx(mixing_matrice[,,2], 1, partner_rate[, 2])
+  nc_m_total <- sweepx(nc_m, 1, base_pop[,1])
+  nc_f_total <- sweepx(nc_f, 1, base_pop[,2])
+  ratio_mf <- nc_m_total / t(nc_f_total)
+  nc_m_adj <- nc_m * ratio_mf^(-0.5)
+  nc_f_adj <- nc_f * t(ratio_mf)^0.5
+  M1 = Matrix(1, 1, 66)
+	Ffm = nc_m_adj * base_pop[,1] %*% M1 * (Matrix::t(M1) %*% (1/base_pop[,2]))
+	Fmf = nc_f_adj * base_pop[,2] %*% M1 * (Matrix::t(M1) %*% (1/base_pop[,1]))
+  Ffm[is.na(Ffm) | !is.finite(Ffm)] = min(Ffm, na.rm=TRUE)
+  Fmf[is.na(Fmf) | !is.finite(Fmf)] = min(Fmf, na.rm=TRUE)
+	FF = (kronecker(Matrix(c(0,1,rep(0, 2)), nrow=2), Fmf) +
+				kronecker(Matrix(c(rep(0, 2),1,rep(0, 1)), nrow=2), Ffm) )
+	fci = function(mui, q=0, adiff=1) (mui + q) / (exp((mui+q)*adiff) - 1)
+	gm = fci(death_rate[,1])
+	gf = fci(death_rate[,2])
+	Vm = Diagonal(66, gm + death_rate[,1])
+	Vf = Diagonal(66, gf + death_rate[,2])
+	Vm[cbind(2:66, 1:65)] = - gm[-1]
+	Vf[cbind(2:66, 1:65)] = - gf[-1]
+	V = (kronecker(Matrix(c(1, rep(0, 3)), nrow=2), Vm) +
+			 kronecker(Matrix(c(rep(0, 3), 1), nrow=2), Vf))
+	NGM = FF %*% Matrix::solve(V)
+	eig = eigen(NGM)
+	eid = which.max(Re(eig$values))
+  #   eig$vectors[,eid] %>% Re %>% { ./sum(.) } %>% matrix(66,2) %>% matplot
+	eig$vectors[,eid] %>% Re %>% { ./sum(.) } %>% matrix(66,2)
+}
+
 
 
 

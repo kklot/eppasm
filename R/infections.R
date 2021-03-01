@@ -54,9 +54,7 @@ infect_mix = function(hivpop, artpop, ii) {
     # other one is "transm"
     sex_factor = ifelse(p$incidmod == "eppspectrum", p$incrr_sex[year], p$mf_transm_rr[year])
     if (p$proj.steps[ts] == p$tsEpidemicStart)
-      transm_prev <- sweep(transm_prev, 2, p$iota * c(1, sqrt(sex_factor)), '+')
-		# x age pattern by sex
-		transm_prev <- transm_prev * p$incrr_age[,,year]
+      transm_prev <- p$leading_ev * p$iota
 		# r(t) x HIV prevalence
     inc_r <- rvec[ts] * sweepx(transm_prev, 2, c(sex_factor, 1))
 		# x contact rate adjusted
