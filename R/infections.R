@@ -27,8 +27,8 @@ infect_mix = function(hivpop, artpop, ii) {
     data_active <<- sweepx(data_active, 1:2, p$est_senesence)
     # sweep over sexual mixing matrices, this results in the number of partnerships
     # this is not depended on model parameters and could be sped up
-    nc_m <- sweepx(p$mixmat[,,m.idx], 1, p$est_pcr[, 1])
-    nc_f <- sweepx(p$mixmat[,,f.idx], 1, p$est_pcr[, 2])
+    nc_m <- sweepx(p$mixmat[,,m.idx], 1, p$incrr_age[, 1, year])
+    nc_f <- sweepx(p$mixmat[,,f.idx], 1, p$incrr_age[, 2, year])
 		# get the total numner of partnerships formed by HIV negative population
     nc_m_total <- sweepx(nc_m, 1, rowSums(data_active[, m.idx, ]))
     nc_f_total <- sweepx(nc_f, 1, rowSums(data_active[, f.idx, ]))

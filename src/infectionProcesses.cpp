@@ -158,8 +158,8 @@ void popC::infect_mix (hivC& hivpop, artC& artpop, int ii, Views& v, const Param
   /* number of partnerships */
   for (int r = 0; r < s.pAG; ++r) { // over my ages
     for (int c = 0; c < s.pAG; ++c) { // over partner ages
-      nc_m[c][r] = p.ic.mixmat[s.M][c][r] * (p.ic.est_pcr[s.M][r]);
-      nc_f[c][r] = p.ic.mixmat[s.F][c][r] * (p.ic.est_pcr[s.F][r]);
+      nc_m[c][r] = p.ic.mixmat[s.M][c][r] * (p.ic.incrr_age[s.year][s.M][r]);
+      nc_f[c][r] = p.ic.mixmat[s.F][c][r] * (p.ic.incrr_age[s.year][s.F][r]);
     }
   }
 	/* number of pns formed by total pop */
