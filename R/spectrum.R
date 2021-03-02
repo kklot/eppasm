@@ -367,8 +367,8 @@ calc_prev_agegr = function(mod, .agegr = seq(15, 50, 5)) {
         group_by(year, sex, agegr, hiv)  %>% 
         summarise(n=sum(n)) %>% 
         pivot_wider(values_from=n, names_from=hiv) %>% 
-        mutate(prev = yes/no) %>% 
-        select(prev)
+        mutate(prev = yes/(yes + no)) %>% 
+        dplyr::select(prev)
 }
 
 
