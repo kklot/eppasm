@@ -32,9 +32,7 @@ fnCreateParam <- function(theta, fp){
   }
   
   if (fp$eppmod %in% c("rspline", "logrw")){
-
     epp_nparam <- fp$numKnots+1
-
     if (fp$eppmod == "rspline"){
       u <- theta[1:fp$numKnots]
       if (fp$rtpenord == 2){
@@ -78,20 +76,19 @@ fnCreateParam <- function(theta, fp){
     param$iota <- transf_iota(theta[fp$rt$n_param+1], fp)
   }
 
+  nparam <- epp_nparam
   if (exists("ancmod", fp) && fp$ancmod$nparam > 0) {
-    theta_anc <- theta[epp_nparam+1:fp$ancmod$nparam]
-    param <- update_par(param, list = create_ancmod_param(theta_anc, fp$ancmod))
+    ancmod.id <- nparam + 1:fp$ancmod$nparam
+    nparam <- nparam + fp$ancmod$nparam
+    param <- update_par(param, list = create_ancmod_param(theta[ancmod.id], fp$ancmod))
     param$frr_cd4 <- fp$frr_cd4 * exp(param$log_frr_adjust)
     param$frr_art <- fp$frr_art * exp(param$log_frr_adjust)
   }
 
   if(exists("fitincrr", where=fp)){
-    incrr_nparam <- getnparam_incrr(fp)
-    if (incrr_nparam) {
-      anc_np <- ifelse(!is.null(fp$ancmod$nparam), fp$ancmod$nparam, 0)
-      cols   <- (epp_nparam+anc_np) + 1:incrr_nparam
-      param  <- transf_incrr(theta[cols], param, fp)
-    }
+    fitincrr.id <- nparam + 1:getnparam_incrr(fp)
+    nparam <- nparam + getnparam_incrr(fp)
+    param  <- transf_incrr(theta[fitincrr.id], param, fp)
   }
   if (fp$ss$MODEL == 2)
     param$leading_ev <- NGM(fp$basepop, fp$db_rate[,,1], fp$mixmat,
@@ -339,18 +336,17 @@ lprior <- function(theta, fp){
     lpr <- lpr + lprior_iota(theta[fp$rt$n_param+1], fp)
   }
 
+  nparam <- epp_nparam
   if (exists("ancmod", fp) && fp$ancmod$nparam > 0) {
-    theta_anc <- theta[epp_nparam+1:fp$ancmod$nparam]
-    lpr <- lpr + lprior_ancmod(theta_anc, fp$ancmod, fp$prior_args)
+    ancmod.id <- nparam + 1:fp$ancmod$nparam
+    nparam <- nparam + fp$ancmod$nparam
+    lpr <- lpr + lprior_ancmod(theta[ancmod.id], fp$ancmod, fp$prior_args)
   }
 
   if(exists("fitincrr", where=fp)){
-    incrr_nparam <- getnparam_incrr(fp)
-    if(incrr_nparam){
-      anc_np <- ifelse(!is.null(fp$ancmod$nparam), fp$ancmod$nparam, 0)
-      cols <- (epp_nparam+anc_np) + 1:incrr_nparam
-      lpr <- lpr + lprior_incrr(theta[cols], fp)
-    }
+    fitincrr.id  <- nparam + 1:getnparam_incrr(fp)
+    nparam <- nparam + getnparam_incrr(fp)
+    lpr <- lpr + lprior_incrr(theta[fitincrr.id], fp)
   }
 
   return(lpr)
@@ -481,20 +477,21 @@ sample.prior <- function(n, fp){
   else if (fp$eppmod == "rhybrid")
     epp_nparam <- fp$rt$n_param+1
 
-  if (exists("ancmod", fp) && fp$ancmod$nparam > 0)
-    nparam <- epp_nparam + fp$ancmod$nparam
-  else
-    nparam <- epp_nparam
+  nparam <- epp_nparam
+  if (exists("ancmod", fp) && fp$ancmod$nparam > 0) {
+    ancmod.id <- nparam + 1:fp$ancmod$nparam
+    nparam <- nparam + fp$ancmod$nparam
+  }
 
-  if(exists("fitincrr", where=fp)) 
+  if(exists("fitincrr", where=fp)) {
+    fitincrr.id <- nparam + 1:getnparam_incrr(fp)
     nparam <- nparam + getnparam_incrr(fp)
+  }
   
   ## Create matrix for storing samples
   mat <- matrix(NA, n, nparam)
 
   if (fp$eppmod %in% c("rspline", "logrw")){
-    epp_nparam <- fp$numKnots+1
-
     if (fp$eppmod == "rspline")
       mat[,1] <- rnorm(n, 1.5, 1)                                                   # u[1]
     else # logrw
@@ -513,7 +510,6 @@ sample.prior <- function(n, fp){
     mat[,1:4] <- t(matrix(rnorm(4*n, .epp.env$priors.rlog_pr_mean, .epp.env$priors.rlog_pr_sd), 4))
     mat[,5] <- sample_iota(n, fp)
   } else if (fp$eppmod == "rtrend"){ # r-trend
-
     mat[,1] <- runif(n, .epp.env$priors.t0.unif.prior[1], .epp.env$priors.t0.unif.prior[2])           # t0
     mat[,2] <- rnorm(n, .epp.env$priors.t1.pr.mean, .epp.env$priors.t1.pr.sd)
     mat[,3] <- rnorm(n, .epp.env$priors.logr0.pr.mean, logr0.pr.sd)  # r0
@@ -526,17 +522,10 @@ sample.prior <- function(n, fp){
 
   ## sample ANC model parameters
   if (exists("ancmod", fp) && fp$ancmod$nparam > 0)
-    mat[ , epp_nparam + 1:fp$ancmod$nparam] <- sample_prior_ancmod(n, fp$ancmod, fp$prior_args)
+    mat[ , ancmod.id] <- sample_prior_ancmod(n, fp$ancmod, fp$prior_args)
 
-  if(exists("fitincrr", where=fp)){
-    incrr_nparam <- getnparam_incrr(fp)
-    if (incrr_nparam) {
-      anc_np <- ifelse(!is.null(fp$ancmod$nparam), fp$ancmod$nparam, 0)
-      cols <- (epp_nparam+anc_np) + 1:incrr_nparam
-      mat[, cols] <- sample_incrr(n, fp)
-    } 
-  }
-  # Need to get rid of index
+  if(exists("fitincrr", where=fp))
+    mat[, fitincrr.id] <- sample_incrr(n, fp)
   
   return(mat)
 }
@@ -550,9 +539,7 @@ ldsamp <- function(theta, fp){
 
   if (fp$eppmod %in% c("rspline", "logrw")){
     epp_nparam <- fp$numKnots+1
-
     nk <- fp$numKnots
-
     if (fp$eppmod == "rspline")  # u[1]
       lpr <- dnorm(theta[1], 1.5, 1, log=TRUE)
     else # logrw
@@ -563,20 +550,16 @@ ldsamp <- function(theta, fp){
     else
       lpr <- bayes_lmvt(theta[2:nk], .epp.env$priors.tau2_prior_shape, .epp.env$priors.tau2_prior_rate)
 
-
     if (exists("r0logiotaratio", fp) && fp$r0logiotaratio)
       lpr <- lpr + dunif (theta[nk+1], r0logiotaratio.unif.prior[1], r0logiotaratio.unif.prior[2], log=TRUE)
     else
       lpr <- lpr + ldsamp_iota(theta[nk+1], fp)
-
   } else if (fp$eppmod == "rlogistic") {
     epp_nparam <- 5
     lpr <- sum(dnorm(theta[1:4], .epp.env$priors.rlog_pr_mean, .epp.env$priors.rlog_pr_sd, log=TRUE))
     lpr <- lpr + ldsamp_iota(theta[5], fp)
   } else if (fp$eppmod == "rtrend"){ # rtrend
-
     epp_nparam <- 7
-
     lpr <- dunif (round(theta[1]), .epp.env$priors.t0.unif.prior[1], .epp.env$priors.t0.unif.prior[2], log=TRUE) +
       dnorm(round(theta[2]), .epp.env$priors.t1.pr.mean, .epp.env$priors.t1.pr.sd, log=TRUE) +
       dnorm(theta[3], logr0.pr.mean, logr0.pr.sd, log=TRUE) +
@@ -588,17 +571,18 @@ ldsamp <- function(theta, fp){
     lpr <- lpr + ldsamp_iota(theta[fp$rt$n_param+1], fp)
   }
 
+  nparam <- epp_nparam
   if (exists("ancmod", fp) && fp$ancmod$nparam > 0) {
-    theta_anc <- theta[epp_nparam+1:fp$ancmod$nparam]
+    ancmod.id <- nparam + 1:fp$ancmod$nparam
+    nparam <- nparam + fp$ancmod$nparam
+    theta_anc <- theta[ancmod.id]
     lpr <- lpr + lprior_ancmod(theta_anc, fp$ancmod, fp$prior_args)
   }
 
   if(exists("fitincrr", where=fp)){
-    incrr_nparam <- getnparam_incrr(fp)
-    if(incrr_nparam){
-      cols <- (epp_nparam+fp$ancmod$nparam) + 1:incrr_nparam
-      lpr <- lpr + lprior_incrr(theta[cols], fp)
-    }
+    fitincrr.id <- nparam + 1:getnparam_incrr(fp)
+    nparam <- nparam + getnparam_incrr(fp)
+    lpr <- lpr + lprior_incrr(theta[cols], fp)
   }
 
   return(lpr)
