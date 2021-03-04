@@ -128,7 +128,9 @@ obj_fn = function(theta, fp, likdat) {
 #' @param B.re Number of resamples
 #' @param doParallel use mclapply when finding initial value
 epp_optim <- function(epp=FALSE, fp, likdat, control_optim, B0, B.re, doParallel) {
-  .control.optim <- list(par=NULL, fn=obj_fn, method="BFGS", hessian=TRUE,
+  bounds <- apply(eppasm:::sample.prior(3000, fp), 2, range)
+  .control.optim <- list(par=NULL, fn=obj_fn, method="L-BFGS-B", hessian=TRUE,
+                         lower=bounds[1, ], upper = bounds[2, ],
                          control=list(fnscale=-1, trace=4, maxit=1e3))
   if (!is.null(names(control_optim)))
     .control.optim <- modifyList(.control.optim, control_optim)
