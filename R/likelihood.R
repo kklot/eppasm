@@ -85,15 +85,24 @@ fnCreateParam <- function(theta, fp){
     param$frr_art <- fp$frr_art * exp(param$log_frr_adjust)
   }
 
-  if(exists("fitincrr", where=fp)){
+  if(exists("fitincrr", where=fp) && fp$fitincrr==TRUE){
     fitincrr.id <- nparam + 1:getnparam_incrr(fp)
     nparam <- nparam + getnparam_incrr(fp)
     param  <- transf_incrr(theta[fitincrr.id], param, fp)
   }
-  if (fp$ss$MODEL == 2)
+
+  if (fp$ss$MODEL == 2) {
+    if (exists("fitpcr", fp) && fp$fitpcr==TRUE) {
+      fitpcr.id <- nparam + 1:8
+      param$est_pcr <- sexual_rate(theta[fitpcr.id])
+    } else
+      param$est_pcr <- fp$est_pcr
+    
     param$leading_ev <- NGM(fp$basepop, fp$db_rate[,,1], fp$mixmat,
-                            param$incrr_age[,,1], 1-fp$Sx[,,1],
+                            param$est_pcr, 1-fp$Sx[,,1],
                             param$mf_transm_rr[[1]], param$rvec[1])
+
+  }
 
   return(param)
 }
@@ -343,10 +352,16 @@ lprior <- function(theta, fp){
     lpr <- lpr + lprior_ancmod(theta[ancmod.id], fp$ancmod, fp$prior_args)
   }
 
-  if(exists("fitincrr", where=fp)){
+  if(exists("fitincrr", where=fp) && fp$fitincrr==TRUE){
     fitincrr.id  <- nparam + 1:getnparam_incrr(fp)
     nparam <- nparam + getnparam_incrr(fp)
     lpr <- lpr + lprior_incrr(theta[fitincrr.id], fp)
+  }
+
+  if(exists("fitpcr", where=fp)){
+    fitpcr.id <- nparam + 1:8
+    nparam <- nparam + 8
+    lpr <- lpr + sexual_rate_prior(theta[fitpcr.id], fp)
   }
 
   return(lpr)
@@ -483,11 +498,16 @@ sample.prior <- function(n, fp){
     nparam <- nparam + fp$ancmod$nparam
   }
 
-  if(exists("fitincrr", where=fp)) {
+  if(exists("fitincrr", where=fp) && fp$fitincrr==TRUE) {
     fitincrr.id <- nparam + 1:getnparam_incrr(fp)
     nparam <- nparam + getnparam_incrr(fp)
   }
   
+  if(exists("fitpcr", where=fp)) {
+    fitpcr.id <- nparam + 1:8
+    nparam <- nparam + 8
+  }
+
   ## Create matrix for storing samples
   mat <- matrix(NA, n, nparam)
 
@@ -524,8 +544,11 @@ sample.prior <- function(n, fp){
   if (exists("ancmod", fp) && fp$ancmod$nparam > 0)
     mat[ , ancmod.id] <- sample_prior_ancmod(n, fp$ancmod, fp$prior_args)
 
-  if(exists("fitincrr", where=fp))
+  if(exists("fitincrr", where=fp) && fp$fitincrr==TRUE)
     mat[, fitincrr.id] <- sample_incrr(n, fp)
+  
+  if (exists("fitpcr", fp))
+    mat[, fitpcr.id] <- sexual_rate_sample(n, fp)
   
   return(mat)
 }
@@ -579,11 +602,18 @@ ldsamp <- function(theta, fp){
     lpr <- lpr + lprior_ancmod(theta_anc, fp$ancmod, fp$prior_args)
   }
 
-  if(exists("fitincrr", where=fp)){
+  if(exists("fitincrr", where=fp) && fp$fitincrr==TRUE){
     fitincrr.id <- nparam + 1:getnparam_incrr(fp)
     nparam <- nparam + getnparam_incrr(fp)
     lpr <- lpr + lprior_incrr(theta[cols], fp)
   }
+  
+  if(exists("fitpcr", where=fp)){
+    fitpcr.id <- nparam + 1:8
+    nparam <- nparam + 8
+    lpr <- lpr + sexual_rate_prior(theta[fitpcr.id], fp)
+  }
+
 
   return(lpr)
 }
