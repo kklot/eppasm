@@ -158,8 +158,8 @@ void popC::infect_mix (hivC& hivpop, artC& artpop, int ii, Views& v, const Param
   /* number of partnerships */
   for (int r = 0; r < s.pAG; ++r) { // over my ages
     for (int c = 0; c < s.pAG; ++c) { // over partner ages
-      nc_m[c][r] = p.ic.mixmat[s.M][c][r] * (p.ic.incrr_age[s.year][s.M][r]);
-      nc_f[c][r] = p.ic.mixmat[s.F][c][r] * (p.ic.incrr_age[s.year][s.F][r]);
+      nc_m[c][r] = p.ic.mixmat[s.M][c][r] * p.ic.est_pcr[s.M][r];
+      nc_f[c][r] = p.ic.mixmat[s.F][c][r] * p.ic.est_pcr[s.F][r];
     }
   }
 	/* number of pns formed by total pop */
@@ -207,6 +207,10 @@ void popC::infect_mix (hivC& hivpop, artC& artpop, int ii, Views& v, const Param
   multiply_with_inplace(transm_prev, rvec[ts]);
   for (int age = 0; age < s.pAG; ++age)
     transm_prev[s.M][age] *= sex_factor;
+  
+  /* for (int sex = 0; sex < s.NG; ++sex) */ 
+  /*   for (int age = 0; age < s.pAG; ++age) */
+  /*     transm_prev[sex][age] *= p.ic.incrr_age[s.year][sex][age]; */
 
   boost2D inc_m(extents[s.pAG][s.pAG]), inc_f(extents[s.pAG][s.pAG]);
 
