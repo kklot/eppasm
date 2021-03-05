@@ -6,7 +6,7 @@
 eppenv <- R6::R6Class("eppenv", class=F, cloneable=F, portable=F, lock_objects=F,
 	public = list(
 		 # r(t) prior
-		 priors.rlog_pr_mean = c(log(2), log(2), log(0.2), 1980),
+		 priors.rlog_pr_mean = c(log(2), log(2), log(1), 1980),
 		 priors.rlog_pr_sd = c(2, 2, 1, 10),
 
 		 # Seeding, see transf_iota 

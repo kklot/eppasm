@@ -133,7 +133,7 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
             data$inputs_nat    <<- read_ext('inputs_nat.rds')
             # sexual parameters
             data$est_db_rate   <<- read_ext('est_db_fixed_first_year.rds')
-            data$est_mixmat    <<- read_ext('est_mixmat_copula.rds')
+            data$est_mixmat    <<- read_ext('est_mixmat_log_log_scaled.rds')
             data$est_pcr       <<- read_ext('est_pcr.rds')
             data$est_senesence <<- read_ext('est_senesence.rds')
             data$est_condom    <<- read_ext('est_condom.rds')
