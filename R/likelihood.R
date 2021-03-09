@@ -92,16 +92,23 @@ fnCreateParam <- function(theta, fp){
   }
 
   if (fp$ss$MODEL == 2) {
+
     if (exists("fitpcr", fp) && fp$fitpcr==TRUE) {
       fitpcr.id <- nparam + 1:8
+      nparam <- nparam + 8
       param$est_pcr <- sexual_rate(theta[fitpcr.id])
     } else
       param$est_pcr <- fp$est_pcr
-    
+
+    if (exists("fitbalance", fp) && fp$fitbalance==TRUE) {
+      fitbalance.id <- nparam + 1
+      param$balancing <- plogis(theta[fitbalance.id]) 
+    } else
+      param$balancing <- fp$balancing
+
     param$leading_ev <- NGM(fp$basepop, fp$db_rate[,,1], fp$mixmat,
                             param$est_pcr, 1-fp$Sx[,,1],
-                            param$mf_transm_rr[[1]], param$rvec[1])
-
+                            param$mf_transm_rr[[1]], param$rvec[1], param$balancing)
   }
 
   return(param)
@@ -119,15 +126,15 @@ fnCreateParam <- function(theta, fp){
 #' @param male_female_rate relative male to female transmission compared to other way around (not important)
 #' @param rt_0 initial growth rate of the r_t model (not important)
 #' @export 
-NGM <- function(base_pop, debut_rate, mixing_matrice, partner_rate, death_rate, male_female_rate, rt_0) {
+NGM <- function(base_pop, debut_rate, mixing_matrice, partner_rate, death_rate, male_female_rate, rt_0, balance) {
 	base_pop[1:16, ] = base_pop[1:16, ] * debut_rate
   nc_m <- sweepx(mixing_matrice[,,1], 1, partner_rate[, 1])
   nc_f <- sweepx(mixing_matrice[,,2], 1, partner_rate[, 2])
   nc_m_total <- sweepx(nc_m, 1, base_pop[,1])
   nc_f_total <- sweepx(nc_f, 1, base_pop[,2])
   ratio_mf <- nc_m_total / t(nc_f_total)
-  nc_m_adj <- nc_m * ratio_mf^(-0.5)
-  nc_f_adj <- nc_f * t(ratio_mf)^0.5
+  nc_m_adj <- nc_m * ratio_mf^(-(1-balance))
+  nc_f_adj <- nc_f * t(ratio_mf)^balance
   M1 = Matrix(1, 1, 66)
 	Ffm = nc_m_adj * base_pop[,1] %*% M1 * (Matrix::t(M1) %*% (1/base_pop[,2]))
 	Fmf = nc_f_adj * base_pop[,2] %*% M1 * (Matrix::t(M1) %*% (1/base_pop[,1]))
@@ -364,6 +371,11 @@ lprior <- function(theta, fp){
     lpr <- lpr + sexual_rate_prior(theta[fitpcr.id], fp)
   }
 
+  if (exists("fitbalance", where=fp) && fp$fitbalance==TRUE) {
+    fitbalance.id <- nparam + 1
+    lpr <- lpr + dnorm(theta[fitbalance.id], log=TRUE)
+  } 
+
   return(lpr)
 }
 
@@ -508,6 +520,11 @@ sample.prior <- function(n, fp){
     nparam <- nparam + 8
   }
 
+  if(exists("fitbalance", where=fp)) {
+    fitbalance.id <- nparam + 1
+    nparam <- nparam + 1
+  }
+
   ## Create matrix for storing samples
   mat <- matrix(NA, n, nparam)
 
@@ -549,6 +566,9 @@ sample.prior <- function(n, fp){
   
   if (exists("fitpcr", fp))
     mat[, fitpcr.id] <- sexual_rate_sample(n, fp)
+  
+  if (exists("fitbalance", fp))
+    mat[, fitbalance.id] <- rnorm(n)
   
   return(mat)
 }
@@ -614,6 +634,11 @@ ldsamp <- function(theta, fp){
     lpr <- lpr + sexual_rate_prior(theta[fitpcr.id], fp)
   }
 
+  if(exists("fitbalance", where=fp)){
+    fitbalance.id <- nparam + 1
+    nparam <- nparam + 1
+    lpr <- lpr + dnorm(theta[fitbalance.id], log=TRUE)
+  }
 
   return(lpr)
 }

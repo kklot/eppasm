@@ -35,8 +35,8 @@ infect_mix = function(hivpop, artpop, ii) {
 		# the balancing ratio
     ratio_mf <- nc_m_total / t(nc_f_total)
     # adjusted number of partnerships
-    nc_m_adj <- nc_m / ratio_mf^0.5
-    nc_f_adj <- nc_f * t(ratio_mf)^0.5
+    nc_m_adj <- nc_m * ratio_mf^(-1 + p$balancing)
+    nc_f_adj <- nc_f * t(ratio_mf)^p$balancing
     # adjusted number of partnerships
     nc_m_adj <- sweepx(nc_m_adj, 1, data_active[,m.idx,hivn.idx]/rowSums(data_active[,m.idx,]))
     nc_f_adj <- sweepx(nc_f_adj, 1, data_active[,f.idx,hivn.idx]/rowSums(data_active[,f.idx,]))

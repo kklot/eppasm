@@ -173,8 +173,8 @@ void popC::infect_mix (hivC& hivpop, artC& artpop, int ii, Views& v, const Param
   for (int r = 0; r < s.pAG; ++r) 
     for (int c = 0; c < s.pAG; ++c) {
       double ratio_mf = nc_m_total[c][r] / nc_f_total[r][c];
-      nc_m_adj[c][r] = nc_m[c][r] / pow(ratio_mf, 0.5);
-      nc_f_adj[r][c] = nc_f[r][c] * pow(ratio_mf, 0.5);
+      nc_m_adj[c][r] = nc_m[c][r] * pow(ratio_mf, p.ic.balancing - 1);
+      nc_f_adj[r][c] = nc_f[r][c] * pow(ratio_mf, p.ic.balancing);
     }
 	/* on negative only  */
   for (int r = 0; r < s.pAG; ++r) 
