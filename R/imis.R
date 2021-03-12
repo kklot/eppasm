@@ -155,12 +155,22 @@ imis <- function(B0, B, B_re, number_k, opt_k=NULL, fp, likdat,
 
   resample <- X_all[sample(seq_len(n_all), B_re, replace = TRUE, prob = weights),]
 
+	mycenter = if(number_k > 1) center_all[[number_k-1]] else  center_all[[number_k]]
+	param 	 = fnCreateParam(mycenter, fp)
+
   if (save_all) {
     mix_all_k <- cbind(dsamp(X_all[1:n_all,], fp) * B0 / B, mapply(mvtnorm::dmvnorm, mean=center_all, sigma=sigma_all, MoreArgs=list(x=X_all[1:n_all,])))
     return(list(stat=stat[1:k,], resample=resample, center=center_all, sigma_all=sigma_all,
                 ll_all=ll_all, lprior_all=lprior_all, mix_all=mix_all, mix_all_k = mix_all_k, n_k=n_k))
   }
-  return(list(stat=stat[1:k,], resample=resample, center=center_all))
+  return(
+				 list(stat=stat[1:k,], resample=resample, center=center_all,
+							par = mycenter,
+							fp = fp,
+							param = param,
+							mod = simmod(update(fp, list=param))
+				 )
+	)
 }
 
 
