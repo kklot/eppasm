@@ -51,6 +51,9 @@ imis <- function(B0, B, B_re, number_k, opt_k=NULL, fp, likdat,
 
 
   iter_start_time <- proc.time()
+
+	notimprove = 0
+
   for(k in 1:number_k){
 
     ## Calculate log-likelihood for new inputs
@@ -99,8 +102,15 @@ imis <- function(B0, B, B_re, number_k, opt_k=NULL, fp, likdat,
 
 
     ## Check for convergence
-    if(stat[k,2] > (1 - exp(-1))*B_re || k == number_k)
-      break;
+		if (k>1) {
+			ko = stat[k,1] - stat[k-1, 1] < 1
+			if (ko) notimprove = notimprove + 1
+		}
+
+    if(stat[k,2] > (1 - exp(-1))*B_re || k == number_k || notimprove == 5) {
+			number_k = k
+      break
+		}
 
     ## ## Identify new mixture component
 
