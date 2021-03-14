@@ -230,12 +230,6 @@ void popC::infect_mix (hivC& hivpop, artC& artpop, int ii, Views& v, const Param
     infections_[s.F][age] = inc_fv[age];
   }
 
-  if (p.ic.proj_steps[ts] == p.ic.tsEpidemicStart) {
-    double ob = sumArray(infections_);
-    double ex = p.ic.iota * sumArray(v.now_pop);
-    multiply_with_inplace(infections_, ex/ob);
-  }
-
   // prev15to49_ts_m should use this one! now just store as below
   boost2D n_pos = v.now_pop[ indices[s.P][_all][_all] ];
   prev15to49_ts[ts] = sumArray(n_pos) / sumArray(v.now_pop);

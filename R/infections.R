@@ -69,9 +69,6 @@ infect_mix = function(hivpop, artpop, ii) {
       rowSums(sweepx(inc_f, 1, data_active[, f.idx, hivn.idx]))
     )
     
-    if (p$proj.steps[ts] == p$tsEpidemicStart)
-      infections.ts <- infections.ts * p$iota * sum(data[,,,year]) / sum(infections.ts)
-
     # incrate15to49_ts[,,ts] <<- inc_r
     prev15to49_ts[ts] <<- prevlast <<- sum(data[,,hivp.idx,year])/sum(data[,,,year])
     infections.ts
