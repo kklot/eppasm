@@ -30,7 +30,7 @@ fnCreateParam <- function(theta, fp){
     for(i in seq_along(fp$prior_args))
       assign(names(fp$prior_args)[i], fp$prior_args[[i]])
   }
-  
+
   if (fp$eppmod %in% c("rspline", "logrw")){
     epp_nparam <- fp$numKnots+1
     if (fp$eppmod == "rspline"){
@@ -48,7 +48,7 @@ fnCreateParam <- function(theta, fp){
 
     param <- list(beta = beta,
                   rvec = as.vector(fp$rvec.spldes %*% beta))
-    
+
     if (fp$eppmod %in% "logrw")
       param$rvec <- exp(param$rvec)
 
@@ -89,6 +89,11 @@ fnCreateParam <- function(theta, fp){
     fitincrr.id <- nparam + 1:getnparam_incrr(fp)
     nparam <- nparam + getnparam_incrr(fp)
     param  <- transf_incrr(theta[fitincrr.id], param, fp)
+  }
+
+  if (exists("fitrelvl", fp) && fp$fitrelvl==TRUE) {
+    fitrelvl.id <- nparam + 1
+    param$rel_vl <- c(1, rep(plogis(theta[fitrelvl.id]), 6)) 
   }
 
   if (fp$ss$MODEL == 2) {
@@ -373,7 +378,14 @@ lprior <- function(theta, fp){
 
   if (exists("fitbalance", where=fp) && fp$fitbalance==TRUE) {
     fitbalance.id <- nparam + 1
+    nparam <- nparam + 1
     lpr <- lpr + dnorm(theta[fitbalance.id], log=TRUE)
+  } 
+
+  if (exists("fitrelvl", fp) && fp$fitrelvl==TRUE) {
+    fitrelvl.id <- nparam + 1
+    nparam <- nparam + 1
+    lpr <- lpr + dnorm(theta[fitrelvl.id], -1, log=TRUE)
   } 
 
   return(lpr)
@@ -525,6 +537,11 @@ sample.prior <- function(n, fp){
     nparam <- nparam + 1
   }
 
+  if(exists("fitrelvl", fp)) {
+    fitrelvl.id <- nparam + 1
+    nparam <- nparam + 1
+  }
+
   ## Create matrix for storing samples
   mat <- matrix(NA, n, nparam)
 
@@ -570,6 +587,9 @@ sample.prior <- function(n, fp){
   if (exists("fitbalance", fp))
     mat[, fitbalance.id] <- rnorm(n)
   
+  if (exists("fitrelvl", fp))
+    mat[, fitrelvl.id] <- rnorm(n, -1)
+
   return(mat)
 }
 
@@ -634,10 +654,16 @@ ldsamp <- function(theta, fp){
     lpr <- lpr + sexual_rate_prior(theta[fitpcr.id], fp)
   }
 
-  if(exists("fitbalance", where=fp)){
+  if(exists("fitbalance", fp)){
     fitbalance.id <- nparam + 1
     nparam <- nparam + 1
     lpr <- lpr + dnorm(theta[fitbalance.id], log=TRUE)
+  }
+
+  if(exists("fitrelvl", fp)){
+    fitrelvl.id <- nparam + 1
+    nparam <- nparam + 1
+    lpr <- lpr + dnorm(theta[fitrelvl.id], -1, log=TRUE)
   }
 
   return(lpr)
