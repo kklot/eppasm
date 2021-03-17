@@ -193,7 +193,6 @@ art_distribute = function(art_elig, art_need) {
     }
   } 
   else {
-
     CD4_LO <- c(500, 350, 250, 200, 100, 50, 0)
     CD4_UP <- c(1000, 500, 350, 250, 200, 100, 50)
     
@@ -220,7 +219,10 @@ art_distribute = function(art_elig, art_need) {
     
     out[j,,] <- sweep(art_elig[j,,,drop=F], 3, initpr_medcat, "*")
     
-    if(j > 0)
+    # if(j > 0) # this generate 1:0! not catching j = 1
+    if (j == 1) 
+      out[1,,] <- sweep(art_elig[1,,,drop=F], 3, initpr_above, "*")
+    else if (j > 1)
       out[1:(j-1),,] <- sweep(art_elig[1:(j-1),,,drop=F], 3, initpr_above, "*")
   }
   out
