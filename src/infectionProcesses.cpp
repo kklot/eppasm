@@ -120,26 +120,25 @@ void popC::infect_mix (hivC& hivpop, artC& artpop, int ii, Views& v, const Param
   for (int sex = 0; sex < s.NG; sex++)
     for (int agr = 0; agr < s.hAG; agr++)
       for (int cd4 = 0; cd4 < s.hDS; cd4++) {
-				double tmp = v.now_hiv[sex][agr][cd4];
+				N1[sex][agr] += v.now_hiv[sex][agr][cd4];
         for (int dur = 0; dur < s.hTS; dur++)
-					tmp += v.now_art[sex][agr][cd4][dur];
-				N1[sex][agr] += tmp;
-				N2[sex][agr] += tmp * p.ic.rel_vl[cd4];
+					N1[sex][agr] += v.now_art[sex][agr][cd4][dur];
 			}
-
-	boost2D 
-		N11(extents[s.NG][s.pAG]),
-		N21(extents[s.NG][s.pAG]),
-		hiv_cd4_adj(extents[s.NG][s.pAG]);
+  for (int sex = 0; sex < s.NG; sex++)
+    for (int agr = 0; agr < s.hAG; agr++)
+      N2[sex][agr] = hivpop.stage0[s.year][sex][agr] +
+        (N1[sex][agr] - hivpop.stage0[s.year][sex][agr]) * p.ic.rel_vl[1];
+  
+	boost2D hiv_cd4_adj(extents[s.NG][s.pAG]);
 
 	for (int sex = 0; sex < s.NG; sex++) {
 		int cusu = 0;
 		for (int agr = 0; agr < s.hAG; agr++) {
 			for (int id = 0; id < s.h_ag_span[agr]; id++) {
 				int age = cusu + id;
-				N11[sex][age] = (N1[sex][agr] == 0) ? 1 : N1[sex][agr];
-				N21[sex][age] = N2[sex][agr];
-				hiv_cd4_adj[sex][age] = N21[sex][age] * data_active[s.P][sex][age]/N11[sex][age];
+        double PP = data_active[s.P][sex][age] / N1[sex][agr];
+        PP = (std::isnan(PP) || std::isinf(PP)) ? 0 : PP;
+        hiv_cd4_adj[sex][age] = N2[sex][agr] * PP;
 			}
 			cusu += s.h_ag_span[agr];
 		}
