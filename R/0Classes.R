@@ -119,6 +119,7 @@ hivEPP <- R6::R6Class("hivepp", class=F, cloneable=F, portable=F, inherit=eppFP,
         grad_db = "array",
         f_death = "array",
         f_death_db = "array",
+        stage0 = "array",
         initialize = function(fp, MODEL) {
             super$initialize(fp)
             MODEL <<- MODEL
@@ -128,6 +129,7 @@ hivEPP <- R6::R6Class("hivepp", class=F, cloneable=F, portable=F, inherit=eppFP,
                 data_db <<- data
                 grad_db <<- grad
                 f_death_db <<- f_death
+                stage0 <<- array(0, c(hAG, NG, PROJ_YEARS))
             }
         })
 )

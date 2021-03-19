@@ -23,6 +23,7 @@ struct outputSEXP { // outputs for R
   SEXP natdeaths;
   SEXP popadjust;
   SEXP data_db;
+  SEXP stage0;
   int np = 0;
   outputSEXP(StateSpace& s) {
     artpop = PROTECT(NEW_NUMERIC(s.hTS * s.hDS * s.hAG * s.NG * s.PROJ_YEARS)); ++np;
@@ -66,7 +67,8 @@ struct outputSEXP { // outputs for R
     
     data_db = PROTECT(NEW_NUMERIC(s.pDB * s.NG * s.pDS * s.PROJ_YEARS)); ++np;
     memset(REAL(data_db), 0, s.pDB * s.NG * s.pDS * s.PROJ_YEARS * sizeof(double));
-    
+    stage0 = PROTECT(NEW_NUMERIC(s.hAG * s.NG * s.PROJ_YEARS)); ++np;
+    memset(REAL(stage0), 0, s.hAG * s.NG * s.PROJ_YEARS * sizeof(double));
   }
   // output fields
   void finalize(const StateSpace& s);
@@ -244,7 +246,9 @@ public: // inits
   death_         (xtents),
   death_db_      (xtents),
   cd4_mort_      (xtents),
-  infect_by_agrp_(extents[s.NG][s.hAG]) {};
+  infect_by_agrp_(extents[s.NG][s.hAG]),
+  stage0         (REAL(O.stage0), extents[s.PROJ_YEARS][s.NG][s.hAG])
+  {};
 // methods
   void aging             (const boost2D& ag_prob, Views& v, const StateSpace& s);
   void add_entrants      (const dvec& artYesNo, Views& v, const Parameters& p, const StateSpace& s);
@@ -272,6 +276,7 @@ public: // fields
   boost3D     death_db_; // death in this year
   boost3D     cd4_mort_;
   boost2D     infect_by_agrp_;
+  boost3D_ptr stage0;
 };
 
 // ART class

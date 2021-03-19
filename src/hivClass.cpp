@@ -8,6 +8,12 @@ void hivC::aging(const boost2D& ag_prob, Views& v, const StateSpace& s) {
       for (int cd4 = 0; cd4 < s.hDS; cd4++)
         if (s.MODEL == 2 && agr < s.hDB)
           data_db[s.year][sex][agr][cd4] = data_db[s.year-1][sex][agr][cd4];
+
+  // moving the newly infected remained after the 10th time step last year
+  for (int sex = 0; sex < s.NG; sex++)
+    for (int agr = 0; agr < s.hAG; agr++)
+      stage0[s.year][sex][agr] = stage0[s.year-1][sex][agr];
+
   for (int sex = 0; sex < s.NG; sex++)
     for (int agr = 0; agr < s.hAG - 1; agr++)
       for (int cd4 = 0; cd4 < s.hDS; cd4++) {
@@ -76,6 +82,11 @@ void hivC::update_infection (const boost2D& new_infect,
       infect_by_agrp_[sex][current_age_group-1] += new_infect[sex][age];
     } // end age-groups
   }
+  // tracking the newly infected at this time step
+  if (s.MODEL == 2)
+    for (int sex = 0; sex < s.NG; sex++)
+      for (int agr = 0; agr < s.hAG; agr++)
+        stage0[s.year][sex][agr] += (infect_by_agrp_[sex][agr] * s.DT);
   for (int sex = 0; sex < s.NG; sex++)
     for (int agr = 0; agr < s.hAG; agr++)
       for (int cd4 = 0; cd4 < s.hDS; cd4++)
@@ -106,8 +117,12 @@ void hivC::scale_cd4_mort(artC& artpop, Views& v,
 void hivC::grad_progress(Views& v, const Parameters& p, const StateSpace& s) {
   if (p.ic.eppmod == 2)
     zeroing(grad); // reset every time step
-  if (s.MODEL == 2)
+  if (s.MODEL == 2) {
     zeroing(grad_db); // reset, this's the 1st time grad_db is used
+    for (int sex = 0; sex < s.NG; sex++)
+      for (int agr = 0; agr < s.hAG; agr++)
+        stage0[s.year][sex][agr] *= (1 - exp(-1/(2 * 12 * s.DT)));
+  }
   // remove cd4 stage progression (untreated)
   for (int sex = 0; sex < s.NG; sex++)
     for (int agr = 0; agr < s.hAG; agr++) {

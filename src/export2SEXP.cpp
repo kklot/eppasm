@@ -61,6 +61,13 @@ void outputSEXP::finalize(const StateSpace& s) {
       SET_DIM(artpopdb, art_sexp_dim);
       SET_ATTR(pop, Rf_install("vpopart"), artpopdb);
       SET_ATTR(pop, Rf_install("vpophiv"), hivpopdb);
+
+      SEXP stage0_dim = PROTECT(NEW_INTEGER(3)); ++np;
+      INTEGER(stage0_dim)[0] = s.hAG;
+      INTEGER(stage0_dim)[1] = s.NG;
+      INTEGER(stage0_dim)[2] = s.PROJ_YEARS;
+      SET_DIM(stage0, stage0_dim);
+      SET_ATTR(pop, Rf_install("stage0"), stage0);
     }
   }
   else 

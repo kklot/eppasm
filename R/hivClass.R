@@ -11,6 +11,8 @@ aging = function(ag_prob) {
         nHup <- sweep(data_db[,-hAG,, year], 2:3, ag_prob[-hAG,], "*")
         data_db[,-hAG,,year] <<- data_db[,-hAG,,year] - nHup
         data_db[,  -1,,year] <<- data_db[,  -1,,year] + nHup
+        # moving the newly infected remained after the 10th time step last year
+        stage0[,,year] <<- stage0[,,year-1]
     }
 },
 
@@ -45,15 +47,25 @@ migration = function(migration_pr) {
 update_infection = function(new_infect) {
     grad[,,] <<- 0 # reset every time step
     grad <<- grad + sweep(p$cd4_initdist, 2:3, sumByAGs(new_infect, ag.idx), "*")
+    # tracking the newly infected at this time step
+    if (MODEL==2)
+        stage0[,,year] <<- stage0[,,year] + sumByAGs(new_infect, ag.idx) * DT
 },
 
 grad_progress = function(mortality_rate) { # HIV gradient progress
     if (p$eppmod == "directincid")
         grad[,,] <<- 0 # reset every time step
-    # remove cd4 stage progression (untreated)
+    if (MODEL==2) # we can do this in update_infection/put here, as stage0 is 
+                  # short-lived, and the way the time step is done (doing as a 
+                  # yearly time step then downscale by the time pace), we would
+                  # move them all to the 1st and 2nd stage anyway; just need to
+                  # know how many were newly infected in the last time step
+    {
+        stage0[,,year] <<- stage0[,,year] * (1 - exp(-1/(2 * 12 * DT)))
+    }
     nARTup <- p$cd4_prog * data[-hDS,,,year]
     grad[-hDS,,] <<- grad[-hDS,,] - nARTup
-    grad[-1,,]   <<- grad[-1,,]   + nARTup # add 
+    grad[-1,,]   <<- grad[-1,,]   + nARTup
     f_death <<- mortality_rate * data[,,,year]
     grad <<- grad - f_death # HIV mortality, untreated
     if (MODEL==2) {
