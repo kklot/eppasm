@@ -26,7 +26,6 @@ infect_mix = function(hivpop, artpop, ii) {
 		hiv_cd4_adj<- N2 * PP                                                                                       # hiv+ active adjusted for relative infection compare to first stage
     data_active <<- sweepx(data_active, 1:2, p$est_senesence)
     # sweep over sexual mixing matrices, this results in the number of partnerships
-    # this is not depended on model parameters and could be sped up
     nc_m <- sweepx(p$mixmat[,,m.idx], 1, p$est_pcr[, 1])
     nc_f <- sweepx(p$mixmat[,,f.idx], 1, p$est_pcr[, 2])
 		# get the total numner of partnerships formed by HIV negative population
