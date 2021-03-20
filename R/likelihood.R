@@ -150,13 +150,13 @@ NGM <- function(base_pop, debut_rate, mixing_matrice, partner_rate, death_rate, 
 	Fmf = nc_f_adj * base_pop[,2] %*% M1 * (Matrix::t(M1) %*% (1/base_pop[,1]))
   Ffm[is.na(Ffm) | !is.finite(Ffm)] = min(Ffm, na.rm=TRUE)
   Fmf[is.na(Fmf) | !is.finite(Fmf)] = min(Fmf, na.rm=TRUE)
-	FF = (kronecker(Matrix(c(0,1,rep(0, 2)), nrow=2), Fmf) +
-				kronecker(Matrix(c(rep(0, 2),1,rep(0, 1)), nrow=2), Ffm) )
+	FF = (kronecker(Matrix::Matrix(c(0,1,rep(0, 2)), nrow=2), Fmf) +
+				kronecker(Matrix::Matrix(c(rep(0, 2),1,rep(0, 1)), nrow=2), Ffm) )
 	fci = function(mui, q=0, adiff=1) (mui + q) / (exp((mui+q)*adiff) - 1)
 	gm = fci(death_rate[,1])
 	gf = fci(death_rate[,2])
-	Vm = Diagonal(66, gm + death_rate[,1])
-	Vf = Diagonal(66, gf + death_rate[,2])
+	Vm = Matrix::Diagonal(66, gm + death_rate[,1])
+	Vf = Matrix::Diagonal(66, gf + death_rate[,2])
 	Vm[cbind(2:66, 1:65)] = - gm[-1]
 	Vf[cbind(2:66, 1:65)] = - gf[-1]
 	V = (kronecker(Matrix::Matrix(c(1, rep(0, 3)), nrow=2), Vm) +

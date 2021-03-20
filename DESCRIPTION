@@ -20,7 +20,8 @@ Imports:
     R6,
     xml2
 LinkingTo: 
-    BH
+    BH,
+    RcppEigen
 Remotes:
     jeffeaton/epp
 License: GPL-3
