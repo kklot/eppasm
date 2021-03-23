@@ -5,6 +5,7 @@
 #' @details
 #' Read data, fit model variations, and visualize...
 #' 
+#' @export
 eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE, 
     public = list(
         data =  list(

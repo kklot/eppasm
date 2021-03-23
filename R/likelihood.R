@@ -140,7 +140,7 @@ NGM <- function(base_pop, debut_rate, mixing_matrice, partner_rate, death_rate, 
   ratio_mf <- nc_m_total / t(nc_f_total)
   nc_m_adj <- nc_m * ratio_mf^(-(1-balance))
   nc_f_adj <- nc_f * t(ratio_mf)^balance
-  M1 = Matrix(1, 1, 66)
+  M1 = Matrix::Matrix(1, 1, 66)
 	Ffm = nc_m_adj * base_pop[,1] %*% M1 * (Matrix::t(M1) %*% (1/base_pop[,2]))
 	Fmf = nc_f_adj * base_pop[,2] %*% M1 * (Matrix::t(M1) %*% (1/base_pop[,1]))
   Ffm[is.na(Ffm) | !is.finite(Ffm)] = min(Ffm, na.rm=TRUE)
@@ -154,8 +154,8 @@ NGM <- function(base_pop, debut_rate, mixing_matrice, partner_rate, death_rate, 
 	Vf = Diagonal(66, gf + death_rate[,2])
 	Vm[cbind(2:66, 1:65)] = - gm[-1]
 	Vf[cbind(2:66, 1:65)] = - gf[-1]
-	V = (kronecker(Matrix(c(1, rep(0, 3)), nrow=2), Vm) +
-			 kronecker(Matrix(c(rep(0, 3), 1), nrow=2), Vf))
+	V = (kronecker(Matrix::Matrix(c(1, rep(0, 3)), nrow=2), Vm) +
+			 kronecker(Matrix::Matrix(c(rep(0, 3), 1), nrow=2), Vf))
 	NGM = FF %*% Matrix::solve(V)
 	eig = eigen(NGM)
 	eid = which.max(Re(eig$values))

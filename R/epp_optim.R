@@ -67,7 +67,7 @@ prepare_fp_likdat <- function(obj, epp, ...) {
     list(fp=fp, likdat=likdat)
 }
 
-fp_fill_missing <- function(fp) { # need further checks
+fp_fill_missing <- function(fp) {
 	warning('Default values filled, check their validity in fp_fill_missing')
   if (!exists("DT", where=fp$ss)) 
     fp$ss$DT <- 1 / fp$ss$hiv_steps_per_year
