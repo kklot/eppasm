@@ -43,6 +43,7 @@ getnparam_incrr <- function(fp){
   value <- switch(as.character(fp$fitincrr),
                   "FALSE"  = 0,
                   "TRUE"   = .epp.env$NPARAM_RW2,
+									sex_only = 1,
                   linincrr = .epp.env$NPARAM_RW2+.epp.env$NPARAM_LININCRR,
                   lognorm  = 7,
                   kincrr   = 1+2*length(16:60),
