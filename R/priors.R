@@ -80,6 +80,10 @@ eppenv <- R6::R6Class("eppenv", class=F, cloneable=F, portable=F, lock_objects=F
 		 kincrr.mean = 1,
 		 kincrr.sd = .5, #
 
+		 # stage0 time
+		 stage0_log_mean = log(6/12), # six months
+		 stage0_log_sd = .5, # six months
+
 		 initialize = function(fp) {
 		 }
 	)

@@ -96,8 +96,8 @@ fnCreateParam <- function(theta, fp){
     param$rel_vl <- c(1, rep(plogis(theta[fitrelvl.id]), 6)) 
   }
 
-  if (fp$ss$MODEL == 2) {
-
+  if (fp$ss$MODEL == 2) 
+  {
     if (exists("fitpcr", fp) && fp$fitpcr==TRUE) {
       fitpcr.id <- nparam + 1:8
       nparam <- nparam + 8
@@ -110,6 +110,11 @@ fnCreateParam <- function(theta, fp){
       param$balancing <- plogis(theta[fitbalance.id]) 
     } else
       param$balancing <- fp$balancing
+
+    if (exists("fit_stage0_time", fp) && fp$fit_stage0_time==TRUE) {
+      fit_stage0_time.id <- nparam + 1
+      param$stage0_time <- exp(theta[fit_stage0_time.id])
+    }
 
     param$leading_ev <- NGM(fp$basepop, fp$db_rate[,,1], fp$mixmat,
                             param$est_pcr, 1-fp$Sx[,,1],
@@ -388,6 +393,12 @@ lprior <- function(theta, fp){
     lpr <- lpr + dnorm(theta[fitrelvl.id], -1, log=TRUE)
   } 
 
+  if (exists("fit_stage0_time", fp) && fp$fit_stage0_time==TRUE) {
+    fit_stage0_time.id <- nparam + 1
+    nparam <- nparam + 1
+    lpr <- lpr + dnorm(theta[fit_stage0_time.id], log(6/12), .5, log=TRUE)
+  }
+
   return(lpr)
 }
 
@@ -542,6 +553,11 @@ sample.prior <- function(n, fp){
     nparam <- nparam + 1
   }
 
+  if(exists("fit_stage0_time", fp)) {
+    fit_stage0_time.id <- nparam + 1
+    nparam <- nparam + 1
+  }
+
   ## Create matrix for storing samples
   mat <- matrix(NA, n, nparam)
 
@@ -589,6 +605,9 @@ sample.prior <- function(n, fp){
   
   if (exists("fitrelvl", fp))
     mat[, fitrelvl.id] <- rnorm(n, -1)
+
+  if (exists("fit_stage0_time", fp))
+    mat[, fit_stage0_time.id] <- rnorm(n, log(6/12), .5)
 
   return(mat)
 }
@@ -664,6 +683,12 @@ ldsamp <- function(theta, fp){
     fitrelvl.id <- nparam + 1
     nparam <- nparam + 1
     lpr <- lpr + dnorm(theta[fitrelvl.id], -1, log=TRUE)
+  }
+
+  if(exists("fit_stage0_time", fp)){
+    fit_stage0_time.id <- nparam + 1
+    nparam <- nparam + 1
+    lpr <- lpr + dnorm(theta[fit_stage0_time.id], log(6/12), .5, log=TRUE)
   }
 
   return(lpr)

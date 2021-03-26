@@ -66,7 +66,7 @@ grad_progress = function(mortality_rate) { # HIV gradient progress
                   # move them all to the 1st and 2nd stage anyway; just need to
                   # know how many were newly infected in the last time step
     {
-        stage0[,,year] <<- stage0[,,year] * (1 - exp(-1/(2 * 12 * DT)))
+        stage0[,,year] <<- stage0[,,year] * (1 - exp(-1/(p$stage0_time * 12 * DT)))
     }
     nARTup <- p$cd4_prog * data[-hDS,,,year]
     grad[-hDS,,] <<- grad[-hDS,,] - nARTup

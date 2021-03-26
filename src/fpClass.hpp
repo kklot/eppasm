@@ -87,6 +87,7 @@ struct IncidenceParam {
   boost2D_ptr    est_pcr;
   boost2D_ptr    leading_ev;
   const double   balancing;
+  const double   stage0_time;
   const double   relinfectART;
   const double * incrr_sex;
   const double * mf_transm_rr;

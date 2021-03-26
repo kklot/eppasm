@@ -104,6 +104,8 @@ fp_fill_missing <- function(fp) {
       fp$est_condom <- array(0, c(66, 2, 52)) # for C++ read, not doing anything
   if (!exists("relsexact_cd4cat", where=fp))
       fp$relsexact_cd4cat <- rep(1, 7)
+  if (!exists("stage0_time", where=fp))
+      fp$stage0_time <- 2
    # rhybrid = 0 # rtrend = 1 # directincid =2
   fp$eppmodInt <- match(fp$eppmod, c("rtrend", "directincid"), nomatch=0) # 0: r-spline;
   fp$ancrtInt <- match(fp$ancrt, c("both"), nomatch=0) # just a placeholder

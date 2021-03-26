@@ -70,6 +70,7 @@ IncidenceParam::IncidenceParam(const SEXP& fp) :
     est_pcr       ( REAL(get_value(fp, "est_pcr")), get_dim_2D(fp, "est_pcr")),
     leading_ev    ( REAL(get_value(fp, "leading_ev")), get_dim_2D(fp, "leading_ev")),
     balancing     (*REAL(get_value(fp, "balancing"))),
+    stage0_time   (*REAL(get_value(fp, "stage0_time"))),
     relinfectART  (*REAL(get_value(fp, "relinfectART"))),
     incrr_sex     ( REAL(get_value(fp, "incrr_sex"))),
     mf_transm_rr  ( REAL(get_value(fp, "mf_transm_rr"))),

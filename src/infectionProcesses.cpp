@@ -109,7 +109,8 @@ void popC::infect_spec (const hivC& hivpop, const artC& artpop, int time_step,
   prev15to49_ts[ts] = prev_last;
 }
 
-void popC::infect_mix (hivC& hivpop, artC& artpop, int ii, Views& v, const Parameters& p, const StateSpace& s) {
+void popC::infect_mix (hivC& hivpop, artC& artpop, int ii, Views& v, const Parameters& p, const StateSpace& s) 
+{
   update_active_pop_to(s.year, v, s);
 	
 	boost2D 
