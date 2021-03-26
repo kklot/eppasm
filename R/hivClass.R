@@ -12,7 +12,10 @@ aging = function(ag_prob) {
         data_db[,-hAG,,year] <<- data_db[,-hAG,,year] - nHup
         data_db[,  -1,,year] <<- data_db[,  -1,,year] + nHup
         # moving the newly infected remained after the 10th time step last year
-        stage0[,,year] <<- stage0[,,year-1]
+        stage0[,,year] <<- stage0[,,year-1] # FIXME: check for ag_prob
+        nHup <- stage0[-hAG,,year] * ag_prob[-hAG,]
+        stage0[-hAG,,year] <<- stage0[-hAG,,year] - nHup
+        stage0[  -1,,year] <<- stage0[  -1,,year] + nHup
     }
 },
 
@@ -34,12 +37,14 @@ sexual_debut = function() {
 
 deaths = function(survival_pr) {
     data[,,,year] <<- sweep(data[,,,year], 2:3, survival_pr, "*")
+    stage0[,,year] <<- stage0[,,year] * survival_pr
     if (MODEL==2)
         data_db[,,,year] <<- sweep(data_db[,,,year], 2:3, survival_pr, "*")
 },
 
 migration = function(migration_pr) {
     data[,,,year] <<- sweep(data[,,,year], 2:3, migration_pr, "*")
+    stage0[,,year] <<- stage0[,,year] * migration_pr
     if (MODEL==2)
         data_db[,,,year] <<- sweep(data_db[,,,year], 2:3, migration_pr, "*")
 },
@@ -91,8 +96,8 @@ distribute_artinit = function(artinit, artpop) {
     all_hivpop    <- (data[,,,year] + DT * grad) + debut_now
     artinit       <- pmin(artinit, all_hivpop)
     pr.weight_db  <- debut_now / all_hivpop # this can be NaN 
-		if (any(is.na(pr.weight_db)))
-			pr.weight_db[which(is.na(pr.weight_db), TRUE)] <- 0
+    rm_idx        <- which(is.na(pr.weight_db) | is.infinite(pr.weight_db), TRUE)
+    pr.weight_db[rm_idx] <- 0
     artinit_db    <- artinit * pr.weight_db
     artinit       <- artinit - artinit_db
     grad_db      <<- grad_db - artinit_db / DT

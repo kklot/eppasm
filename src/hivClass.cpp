@@ -15,6 +15,12 @@ void hivC::aging(const boost2D& ag_prob, Views& v, const StateSpace& s) {
       stage0[s.year][sex][agr] = stage0[s.year-1][sex][agr];
 
   for (int sex = 0; sex < s.NG; sex++)
+    for (int agr = 0; agr < s.hAG - 1; agr++) {
+      double nHup = stage0(agr, sex, s.year-1) * ag_prob(agr, sex);
+      stage0(agr, sex, s.year)     -= nHup;
+      stage0(agr + 1, sex, s.year) += nHup;
+    }
+  for (int sex = 0; sex < s.NG; sex++)
     for (int agr = 0; agr < s.hAG - 1; agr++)
       for (int cd4 = 0; cd4 < s.hDS; cd4++) {
         double nHup = v.pre_hiv[sex][agr][cd4] * ag_prob[sex][agr];
@@ -58,6 +64,7 @@ void hivC::deaths (const boost2D& survival_pr, Views& v, const StateSpace& s) {
         if (s.MODEL == 2 && agr < s.hDB)
           data_db[s.year][sex][agr][cd4] *= survival_pr[sex][agr];
       }
+  stage0.chip(s.year,2) = stage0.chip(s.year,2) * survival_pr;
 }
 
 void hivC::migration (const boost2D& migration_pr, Views& v, const StateSpace& s) {
@@ -68,6 +75,7 @@ void hivC::migration (const boost2D& migration_pr, Views& v, const StateSpace& s
         if (s.MODEL == 2 && agr < s.hDB)
           data_db[s.year][sex][agr][cd4] *= migration_pr[sex][agr];
       }
+  stage0.chip(s.year,2) = stage0.chip(s.year,2) * migration_pr;
 }
 
 void hivC::update_infection (const boost2D& new_infect,
