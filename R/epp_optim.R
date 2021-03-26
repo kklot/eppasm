@@ -128,12 +128,16 @@ obj_fn = function(theta, fp, likdat) {
 #' @param B.re Number of resamples
 #' @param doParallel use mclapply when finding initial value
 epp_optim <- function(epp=FALSE, fp, likdat, control_optim, B0, B.re, doParallel) {
-  bounds <- apply(eppasm:::sample.prior(3000, fp), 2, range)
-  .control.optim <- list(par=NULL, fn=obj_fn, method="L-BFGS-B", hessian=TRUE,
-                         lower=bounds[1, ], upper = bounds[2, ],
+  .control.optim <- list(par=NULL, fn=obj_fn, method="BFGS", hessian=TRUE,
                          control=list(fnscale=-1, trace=4, maxit=1e3))
   if (!is.null(names(control_optim)))
     .control.optim <- modifyList(.control.optim, control_optim)
+  if (exists('bounded', .control.optim)) {
+    bounds <- apply(eppasm:::sample.prior(3000, fp), 2, range)    
+    .control.optim <- modifyList(.control.optim, list(
+      method = "L-BFGS-B", lower=bounds[1, ], upper = bounds[2, ]
+    ))
+  }
   if (is.null(.control.optim$par)) { # Find starting values that MAP
     X0     = eppasm:::sample.prior(B0, fp)
     message('Searching for starting values...\r'); flush.console()
