@@ -52,9 +52,9 @@ mod_dimnames <- function(mod, ss){
 #' @inheritParams mod_dimnames
 hivpop_singleage <- function(mod, ss){
 
-  hivp <- mod[ , , ss$hivp.idx, ]
-  hivpop <- attr(mod, "hivpop")
-  artpop <- attr(mod, "artpop")
+  hivp   <- mod$data[,, ss$hivp.idx, ]
+  hivpop <- mod$hivpop
+  artpop <- mod$artpop
 
   denom <- colSums(hivpop) + colSums(artpop,,2)
   hivdist <- sweep(hivpop, 2:4, denom, "/")

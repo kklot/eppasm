@@ -1,4 +1,5 @@
 #' @useDynLib eppasm eppasmC eppasmOOpp
+#' @export
 simmod.specfp <- function(fp) {
 
   MODEL   = ifelse(is.null(fp$ss$MODEL), 1, fp$ss$MODEL)

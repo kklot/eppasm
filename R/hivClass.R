@@ -12,7 +12,7 @@ aging = function(ag_prob) {
         data_db[,-hAG,,year] <<- data_db[,-hAG,,year] - nHup
         data_db[,  -1,,year] <<- data_db[,  -1,,year] + nHup
         # moving the newly infected remained after the 10th time step last year
-        stage0[,,year] <<- stage0[,,year-1] # FIXME: check for ag_prob
+        stage0[,,year] <<- stage0[,,year-1] 
         nHup <- stage0[-hAG,,year] * ag_prob[-hAG,]
         stage0[-hAG,,year] <<- stage0[-hAG,,year] - nHup
         stage0[  -1,,year] <<- stage0[  -1,,year] + nHup
@@ -37,16 +37,18 @@ sexual_debut = function() {
 
 deaths = function(survival_pr) {
     data[,,,year] <<- sweep(data[,,,year], 2:3, survival_pr, "*")
-    stage0[,,year] <<- stage0[,,year] * survival_pr
-    if (MODEL==2)
-        data_db[,,,year] <<- sweep(data_db[,,,year], 2:3, survival_pr, "*")
+    if (MODEL==2) {
+		stage0[,,year] <<- stage0[,,year] * survival_pr
+		data_db[,,,year] <<- sweep(data_db[,,,year], 2:3, survival_pr, "*")
+	}
 },
 
 migration = function(migration_pr) {
     data[,,,year] <<- sweep(data[,,,year], 2:3, migration_pr, "*")
-    stage0[,,year] <<- stage0[,,year] * migration_pr
-    if (MODEL==2)
-        data_db[,,,year] <<- sweep(data_db[,,,year], 2:3, migration_pr, "*")
+    if (MODEL==2) {
+			stage0[,,year] <<- stage0[,,year] * migration_pr
+			data_db[,,,year] <<- sweep(data_db[,,,year], 2:3, migration_pr, "*")
+    }
 },
 
 update_infection = function(new_infect) {

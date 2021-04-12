@@ -1,8 +1,14 @@
+#' @export 
 simmod <- function(fp, ...) UseMethod("simmod")
 simfit <- function(fit, ...) UseMethod("simfit")
 
+#' @export 
 prev <- function(mod, ...) UseMethod("prev")
+
+#' @export 
 fnPregPrev <- function(mod, fp, ...) UseMethod("fnPregPrev")
+
+#' @export 
 incid <- function(mod, ...) UseMethod("incid")
 
 incid_sexratio <- function(mod, ...) UseMethod("incid_sexratio")
@@ -23,4 +29,5 @@ artcov15to49 <- function(mod, ...) UseMethod("artcov15to49")
 artcov15plus <- function(mod, ...) UseMethod("artcov15plus")
 age15pop <- function(mod, ...) UseMethod("age15pop")
 
+#' @export 
 update <- function(x, ...) UseMethod("update")

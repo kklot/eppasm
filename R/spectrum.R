@@ -295,6 +295,7 @@ prepare_rspline_model <- function(fp, numKnots=NULL, tsEpidemicStart=fp$ss$time_
   return(fp)
 }
 
+#' @export
 update.specfp <- function (fp, ..., keep.attr = TRUE, list = vector("list")) {
   dots <- substitute(list(...))[-1]
   newnames <- names(dots)
@@ -324,8 +325,12 @@ update_par <- update.specfp
 #########################
 
 ## modprev15to49 <- function(mod, fp) {colSums(mod[fp$ss$p.age15to49.idx,,fp$ss$hivp.idx,],,2) / colSums(mod[fp$ss$p.age15to49.idx,,,],,3)}
+
+#' @export
 prev.spec <- function(mod, fp) { mod$prev15to49 }
+#' @export
 incid.spec <- function(mod, fp) { mod$incid15to49 }
+#' @export
 fnPregPrev.spec <- function(mod, fp) { mod$pregprev }
 
 calc_prev15to49 <- function(mod, fp) {

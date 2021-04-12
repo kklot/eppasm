@@ -582,11 +582,11 @@ sample.prior <- function(n, fp){
   } else if (fp$eppmod == "rtrend"){ # r-trend
     mat[,1] <- runif(n, .epp.env$priors.t0.unif.prior[1], .epp.env$priors.t0.unif.prior[2])           # t0
     mat[,2] <- rnorm(n, .epp.env$priors.t1.pr.mean, .epp.env$priors.t1.pr.sd)
-    mat[,3] <- rnorm(n, .epp.env$priors.logr0.pr.mean, logr0.pr.sd)  # r0
+    mat[,3] <- rnorm(n, .epp.env$priors.logr0.pr.mean, .epp.env$priors.logr0.pr.sd)  # r0
     mat[,4:7] <- t(matrix(rnorm(4*n, .epp.env$priors.rtrend.beta.pr.mean, .epp.env$priors.rtrend.beta.pr.sd), 4, n))  # beta
   } else if (fp$eppmod == "rhybrid") {
     mat[,1:4] <- t(matrix(rnorm(4*n, .epp.env$priors.rlog_pr_mean, .epp.env$priors.rlog_pr_sd), 4))
-    mat[,4+1:fp$rt$n_rw] <- rnorm(n*fp$rt$n_rw, 0, rw_prior_sd)  # u[2:numKnots]
+    mat[,4+1:fp$rt$n_rw] <- rnorm(n*fp$rt$n_rw, 0, .epp.env$priors.rw_prior_sd)  # u[2:numKnots]
     mat[,fp$rt$n_param+1] <- sample_iota(n, fp)
   }
 
@@ -644,12 +644,12 @@ ldsamp <- function(theta, fp){
     epp_nparam <- 7
     lpr <- dunif (round(theta[1]), .epp.env$priors.t0.unif.prior[1], .epp.env$priors.t0.unif.prior[2], log=TRUE) +
       dnorm(round(theta[2]), .epp.env$priors.t1.pr.mean, .epp.env$priors.t1.pr.sd, log=TRUE) +
-      dnorm(theta[3], logr0.pr.mean, logr0.pr.sd, log=TRUE) +
+      dnorm(theta[3], logr0.pr.mean, .epp.env$priors.logr0.pr.sd, log=TRUE) +
       sum(dnorm(theta[4:7], .epp.env$priors.rtrend.beta.pr.mean, .epp.env$priors.rtrend.beta.pr.sd, log=TRUE))
   } else if (fp$eppmod == "rhybrid"){
     epp_nparam <- fp$rt$n_param+1
     lpr <- sum(dnorm(theta[1:4], .epp.env$priors.rlog_pr_mean, .epp.env$priors.rlog_pr_sd, log=TRUE)) +
-      sum(dnorm(theta[4+1:fp$rt$n_rw], 0, rw_prior_sd, log=TRUE))
+      sum(dnorm(theta[4+1:fp$rt$n_rw], 0, .epp.env$priors.rw_prior_sd, log=TRUE))
     lpr <- lpr + ldsamp_iota(theta[fp$rt$n_param+1], fp)
   }
 
