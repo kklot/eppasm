@@ -1,6 +1,7 @@
 #' @useDynLib eppasm eppasmC eppasmOOpp
 #' @export
 simmod.specfp <- function(fp) {
+	fp  <- fp_fill_missing(fp)
 
   MODEL   = ifelse(is.null(fp$ss$MODEL), 1, fp$ss$MODEL)
   MIX     = ifelse(is.null(fp$ss$MIX), FALSE, fp$ss$MIX)

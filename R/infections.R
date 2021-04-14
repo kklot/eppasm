@@ -26,7 +26,7 @@ infect_mix = function(hivpop, artpop, ii) {
 		
     PP <- data_active[,,hivp.idx]/N1
     PP[which(is.na(PP) | !is.finite(PP), TRUE)] <- 0
-		hiv_cd4_adj<- N2 * PP
+		hiv_cd4_adj <- N2 * PP
     
     data_active <<- sweepx(data_active, 1:2, p$est_senesence)
     # sweep over sexual mixing matrices, this results in the number of partnerships
@@ -60,7 +60,6 @@ infect_mix = function(hivpop, artpop, ii) {
       transm_prev <- p$leading_ev * p$iota
 		# r(t) x HIV prevalence
     inc_r <- rvec[ts] * sweepx(transm_prev, 2, c(sex_factor, 1))
-    # inc_r <- inc_r * incrr_age[,,year]
 		# x contact rate adjusted
     inc_m <- sweepx(nc_m_adj, 2, inc_r[, f.idx])
     inc_f <- sweepx(nc_f_adj, 2, inc_r[, m.idx])

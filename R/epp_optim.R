@@ -68,9 +68,20 @@ prepare_fp_likdat <- function(obj, epp, ...) {
 }
 
 fp_fill_missing <- function(fp) {
-	warning('Default values filled, check their validity in fp_fill_missing')
+	# warning('Default values filled, check their validity in fp_fill_missing')
+  if (!exists("MODEL", where=fp$ss)) 
+    fp$ss$MODEL <- 1
+  if (!exists("MIX", where=fp$ss)) 
+    fp$ss$MIX <- FALSE
   if (!exists("DT", where=fp$ss)) 
     fp$ss$DT <- 1 / fp$ss$hiv_steps_per_year
+  if (!exists("n_steps", where=fp)) 
+    fp$n_steps <- max(length(fp$proj.steps), fp$SIM_YEARS * fp$ss$hiv_steps_per_year)
+  if (!exists("pDB", where=fp$ss)) {
+    fp$ss$pDB    = 16
+    fp$ss$db_aid = 1:16
+    fp$ss$db_agr = 1:8
+  }
   if (!exists("incidmod", where=fp)) 
     fp$incidmod <- "eppspectrum"
   fp$incidmodInt <- match(fp$incidmod, c("eppspectrum", "transm"))-1L  # -1 for 0-based indexing
@@ -85,23 +96,29 @@ fp_fill_missing <- function(fp) {
   if (!exists("est_senesence", where=fp))
     fp$est_senesence <- readRDS(system.file("extdata", "est_senesence.rds", package="eppasm"))[[1]]
   if (!exists("rvec", where=fp)) 
-      fp$rvec <- 1
+      fp$rvec <- rep(1, fp$n_steps)
   if (!fp$popadjust) {
-      fp$targetpop <- array(0, c(1,1,1))
-      fp$entrantpop <- array(0, c(1,1))
+      fp$targetpop <- array(0, c(66,2,fp$ss$PROJ_YEARS))
+      fp$entrantpop <- array(0, c(1:2,fp$ss$PROJ_YEARS))
   }
+  if (!exists("db_rate", where=fp))
+      fp$db_rate <- array(0, c(16, 2, fp$ss$PROJ_YEARS))
+  if (!exists("leading_ev", where=fp))
+      fp$leading_ev <- matrix(0, 66, 2)
+  if (!exists("mixmat", where=fp))
+      fp$mixmat <- readRDS(system.file("extdata", "est_mixmat.rds", package="eppasm"))[[1]]
   if (!exists("rel_vl", where=fp))
-      fp$rel_vl <- c(1, rep(.4, 5), .8)
+      fp$rel_vl <- c(1, 7)
   if (!exists("mf_transm_rr", where=fp))
-      fp$mf_transm_rr <- fp$incrr_sex
+      fp$mf_transm_rr <- fp$incrr_sex[1]
   if (!exists("balancing", where=fp))
       fp$balancing <- .5 # for C++ read, not doing anything
   if (!exists("fage", where=fp))
       fp$fage <- matrix(1, 1, 2) # for C++ read, not doing anything
   if (!exists("est_pcr", where=fp))
-      fp$est_pcr <- matrix(1, 1, 2) # for C++ read, not doing anything
+      fp$est_pcr <- array(1, c(66, 2, fp$ss$PROJ_YEARS))
   if (!exists("est_condom", where=fp))
-      fp$est_condom <- array(0, c(66, 2, 52)) # for C++ read, not doing anything
+      fp$est_condom <- array(0, c(66, 2, fp$ss$PROJ_YEARS))
   if (!exists("relsexact_cd4cat", where=fp))
       fp$relsexact_cd4cat <- rep(1, 7)
   if (!exists("stage0_time", where=fp))

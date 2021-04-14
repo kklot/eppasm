@@ -64,7 +64,7 @@ popEPP <- R6::R6Class("popepp", class=F, cloneable=F, portable=F, inherit=eppFP,
             prev15to49    <<- incid15to49  <<- pregprevlag <<- pregprev <<- entrantprev
             adj_prob_age  <<- array(0, c(pAG, NG, PROJ_YEARS))
             infections    <<- hivdeaths <<- natdeaths <<- adj_prob_age
-            prev15to49_ts <<- incrate15to49_ts <<- rep(NA, length(p$rvec))
+            prev15to49_ts <<- incrate15to49_ts <<- rep(0, length(p$rvec))
             hivp_entrants_out <<- array(0, c(NG, PROJ_YEARS))
             
             # use in model
