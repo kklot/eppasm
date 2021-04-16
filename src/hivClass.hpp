@@ -44,6 +44,8 @@ public: // inits
     data_db.setZero();
     stage0.setZero();
     cd4_mort_ = p->nh.cd4_mort; // copy bc. this can be scaled
+    data_curr = p->ic.stages_0;
+    stage0.chip(0, 2) = p->ic.stage0_0;
   };
 // methods
   void update_views(int t) { // #TutorialMapPlacementNew

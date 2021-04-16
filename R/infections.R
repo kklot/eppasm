@@ -26,7 +26,7 @@ infect_mix = function(hivpop, artpop, ii) {
 		
     PP <- data_active[,,hivp.idx]/N1
     PP[which(is.na(PP) | !is.finite(PP), TRUE)] <- 0
-		hiv_cd4_adj <- N2 * PP
+		hiv_cd4_adj<- N2 * PP
     
     data_active <<- sweepx(data_active, 1:2, p$est_senesence)
     # sweep over sexual mixing matrices, this results in the number of partnerships
@@ -56,8 +56,6 @@ infect_mix = function(hivpop, artpop, ii) {
 		transm_prev <- hiv_cd4_adj * (1 - art_cov * p$relinfectART) / rowSums(data_active,,2) # prevalence adjusted for art
     # other one is "transm"
     sex_factor = ifelse(p$incidmod == "eppspectrum", p$incrr_sex[year], p$mf_transm_rr[year])
-    if (p$proj.steps[ts] == p$tsEpidemicStart)
-      transm_prev <- p$leading_ev * p$iota
 		# r(t) x HIV prevalence
     inc_r <- rvec[ts] * sweepx(transm_prev, 2, c(sex_factor, 1))
 		# x contact rate adjusted
@@ -71,7 +69,6 @@ infect_mix = function(hivpop, artpop, ii) {
       rowSums(sweepx(inc_m, 1, data_active[, m.idx, hivn.idx])), 
       rowSums(sweepx(inc_f, 1, data_active[, f.idx, hivn.idx]))
     )
-    
     # incrate15to49_ts[,,ts] <<- inc_r
     prev15to49_ts[ts] <<- prevlast <<- sum(data[,,hivp.idx,year])/sum(data[,,,year])
     infections.ts

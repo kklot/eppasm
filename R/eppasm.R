@@ -1,4 +1,3 @@
-#' @useDynLib eppasm eppasmC eppasmOOpp
 #' @export
 simmod.specfp <- function(fp) {
 	fp  <- fp_fill_missing(fp)

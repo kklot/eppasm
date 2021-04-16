@@ -108,10 +108,15 @@ public: // Pop inits
       for (int i = 0; i < p->ic.rvec.size(); ++i)
         rvec(i) = p->ic.rvec(i);
 
-    if (s->MODEL==2)
+    if (s->MODEL==2) {
       for (int sex = 0; sex < s->NG; sex++)
         for (int age = 0; age < s->pDB; age++)
           data_db(age, sex, s->N, 0) = p->dm.basepop(age, sex) * (1 - p->ic.db_rate(age, sex, 0));
+      // TODO: need to cover this
+      //       if (p->ic.proj_steps[ts] == p->ic.tsEpidemicStart)
+      data_curr.chip(s->P, 2)  = p->ic.pop_infect_0;
+      data_curr.chip(s->N, 2) -= p->ic.pop_infect_0;
+    }
   }
 
   void update_views(int t) { // #TutorialMapPlacementNew
@@ -781,8 +786,6 @@ public: // Pop inits
     // only two modes: "eppspectrum"=0 or "transm"=1
     T RR = (p->ic.incidmod == 0) ? p->ic.incrr_sex[s->year] : p->ic.mf_transm_rr[s->year];
     int ts = (s->year-1)/s->DT + ii;
-    if (p->ic.proj_steps[ts] == p->ic.tsEpidemicStart)
-      transm_prev = p->ic.leading_ev * p->ic.iota;
     transm_prev *= transm_prev.constant(rvec(ts));
     transm_prev.chip(0,s->M+1) = transm_prev.chip(0,s->M+1) * RR;
     

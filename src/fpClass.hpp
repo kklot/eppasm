@@ -122,7 +122,10 @@ struct IncidenceParam {
   epp::map_of_cube<double> est_condom;
   epp::map_of_matrix<double> est_senesence;
   epp::map_of_matrix<double> est_pcr;
-  epp::map_of_matrix<double> leading_ev;
+  epp::map_of_cube<double> leading_ev;
+  epp::map_of_matrix<double> pop_infect_0;
+  epp::map_of_matrix<double> stage0_0;
+  epp::map_of_cube<double> stages_0;
   const double   balancing;
   const double   stage0_time;
   const double   relinfectART;
@@ -150,7 +153,10 @@ struct IncidenceParam {
       est_condom    ( REAL(get_value(fp, "est_condom")), get_dim_3D(fp, "est_condom")),
       est_senesence ( REAL(get_value(fp, "est_senesence")), get_dim_2D(fp, "est_senesence")),
       est_pcr       ( REAL(get_value(fp, "est_pcr")), get_dim_2D(fp, "est_pcr")),
-      leading_ev    ( REAL(get_value(fp, "leading_ev")), get_dim_2D(fp, "leading_ev")),
+      leading_ev    ( REAL(get_value(fp, "leading_ev")), get_dim_3D(fp, "leading_ev")),
+      pop_infect_0  ( REAL(get_value(fp, "pop_infect_0")), get_dim_2D(fp, "pop_infect_0")),
+      stage0_0      ( REAL(get_value(fp, "stage0_0")), get_dim_2D(fp, "stage0_0")),
+      stages_0      ( REAL(get_value(fp, "stages_0")), get_dim_3D(fp, "stages_0")),
       balancing     (*REAL(get_value(fp, "balancing"))),
       stage0_time   (*REAL(get_value(fp, "stage0_time"))),
       relinfectART  (*REAL(get_value(fp, "relinfectART"))),

@@ -49,7 +49,9 @@ popEPP <- R6::R6Class("popepp", class=F, cloneable=F, portable=F, inherit=eppFP,
         MSM               = "msmEPP class",
         FSW               = "fswEPP class",
         CLIENT            = "cliEPP class",
-        initialize = function(fp, MODEL=1, VERSION="R", MIX=F) {
+
+        initialize = function(fp, MODEL=1, VERSION="R", MIX=F) 
+        {
             super$initialize(fp) 
             # 'Initialize pop array'
             MODEL       <<- MODEL
@@ -72,11 +74,19 @@ popEPP <- R6::R6Class("popepp", class=F, cloneable=F, portable=F, inherit=eppFP,
             if (p$eppmod != "directincid")
               rvec <<- if (p$eppmod=="rtrend") rep(NA, length(p$proj.steps)) else p$rvec
 
-            if (MODEL==2)
+            if (MODEL==2) 
+            {
                 VIRGIN <<- virginEPP$new(fp, MODEL) # has its own initialization
+                if (exists("leading_ev", fp)) { # distribute t_0 infection based on leading eigenvector
+                    # TODO: need to cover this 
+                    #       if (p->ic.proj_steps[ts] == p->ic.tsEpidemicStart)
+                    data[,,hivp.idx,1] <<- fp$pop_infect_0
+                    data[,,hivn.idx,1] <<- data[,,hivn.idx,1] - fp$pop_infect_0
+                }
+            }
             if (MIX) {
               incrate15to49_ts  <<- array(0, c(pAG, NG, length(p$rvec)))
-              WAIFW <<- array(0, c(pAG, pAG, NG, PROJ_YEARS))
+              WAIFW             <<- array(0, c(pAG, pAG, NG, PROJ_YEARS))
             }
         }
     )
@@ -111,27 +121,37 @@ artEPP <- R6::R6Class("artepp", class=F, cloneable=F, portable=F, inherit=eppFP,
 hivEPP <- R6::R6Class("hivepp", class=F, cloneable=F, portable=F, inherit=eppFP,
     lock_objects=F, 
     public = list(
-        year = 1,
-        MODEL = "integer",
-        data = "array",
-        data_db = "array",
-        grad = "array",
-        grad_db = "array",
-        f_death = "array",
+
+        year       = 1,
+        MODEL      = "integer",
+        data       = "array",
+        data_db    = "array",
+        grad       = "array",
+        grad_db    = "array",
+        f_death    = "array",
         f_death_db = "array",
-        stage0 = "array",
-        initialize = function(fp, MODEL) {
+        stage0     = "array",
+        
+        initialize = function(fp, MODEL) 
+        {
             super$initialize(fp)
-            MODEL <<- MODEL
-            data <<- array(0, c(hDS, hAG, NG, PROJ_YEARS))
+            MODEL   <<- MODEL
+            data    <<- array(0, c(hDS, hAG, NG, PROJ_YEARS))
             f_death <<- grad <<- array(0, c(hDS, hAG, NG))
-            if (MODEL==2) {
-                data_db <<- data
-                grad_db <<- grad
+
+            if (MODEL==2) 
+            {
+                data_db    <<- data
+                grad_db    <<- grad
                 f_death_db <<- f_death
-                stage0 <<- array(0, c(hAG, NG, PROJ_YEARS))
+                stage0     <<- array(0, c(hAG, NG, PROJ_YEARS))
+                if (exists("leading_ev", fp)) {
+                    data[,,,1]  <<- fp$stages_0
+                    stage0[,,1] <<- fp$stage0_0
+                }
             }
-        })
+        }
+    )
 )
 
 virginEPP <- R6::R6Class("virginepp", class=F, cloneable=F, portable=F, inherit=eppFP,
@@ -140,13 +160,16 @@ virginEPP <- R6::R6Class("virginepp", class=F, cloneable=F, portable=F, inherit=
         year = 1,
         MODEL = "integer",
         data = "array",
-        initialize = function(fp, MODEL) {                               
+        
+        initialize = function(fp, MODEL) 
+        {                         
             super$initialize(fp)
             MODEL <<- MODEL
             data  <<- array(0, c(pDB, NG, pDS, PROJ_YEARS)) # debut ages only
             data[,,hivn.idx,1] <<- p$basepop[db_aid,] * (1 - p$db_rate[,,1])
             # Note that only p$db_rate[,,1] is not a rate but CDF instead
-        })
+        }
+    )
 )
 
 cliEPP <- fswEPP <- msmEPP <- virginEPP

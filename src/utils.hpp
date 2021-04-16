@@ -4,6 +4,8 @@
 #include <Rinternals.h>
 #include <Rdefines.h>
 
+#include <Eigen/Core>
+#include <Eigen/SparseCore>
 #include <unsupported/Eigen/CXX11/Tensor>
 #pragma once
 
@@ -27,7 +29,33 @@ namespace epp {
   index<1> by_rack({2});
   index<2> by_bay({0, 1}); // row and col
   index<2> transpose({1, 0});
-}
+
+  // power method
+  template<typename T>
+  Eigen::Matrix<T, Eigen::Dynamic, 1> 
+  power_method(const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>& Jac, 
+               T e = 1e-6, T R0 = 1., int max_iter = 1e3)
+  {
+    Eigen::SparseMatrix<T> Jac_sparse = Jac.sparseView();
+    Eigen::Matrix<T, Eigen::Dynamic, 1> v(Jac.rows()); 
+    v.setRandom();
+    T r = R0, u;
+    for (int i = 0; i < max_iter; i++) 
+    {
+      v = Jac_sparse * v;
+      u = v.norm();
+      v = v / u;
+      if (std::abs( r - u ) > e) {
+        if (i==max_iter)
+          Rf_warning("stop at iter:", max_iter, "with error: ", std::abs(r - u));
+        r = u;
+      } else {
+        break;
+      }
+    }
+    return v;
+  }
+} 
 
 SEXP get_value(SEXP list, const char *str) {
   SEXP out = R_NilValue, names = GET_NAMES(list);
