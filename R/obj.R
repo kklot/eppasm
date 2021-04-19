@@ -8,32 +8,25 @@
 #' @export
 eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE, 
     public = list(
+        #' @field data store all neccessary data for model fitting
         data =  list(
-            #' @field prev_15to49_nat country prevalence data
             prev_15to49_nat = NULL, 
-            #' @field prev_agesex_nat country prevalence data
             prev_agesex_nat = NULL, 
-            #' @field ancsitedata country prevalence data
             ancsitedata = NULL, 
-            #' @field inputs_nat country prevalence data.
             inputs_nat = NULL, 
-            #' @field est_db_rate input sexual debut rate.
             est_db_rate = NULL, 
-            #' @field est_mixmat input sexual mixing matrices.
             est_mixmat = NULL, 
-            #' @field est_pcr input partner change rate.
             est_pcr = NULL, 
-            #' @field est_senesence input sexual senesence.
             est_senesence = NULL
         ),
+
         #' @details
         #' Read default data, can be overrided by providing args to fits(...)
         #' 
         #' @param old_fits Reinitialize but copy old fitted objects, this is due
         #' to R6 once created reloading package does not update methods
         #' @return nothing
-         
-        initialize = function(old_fits = NULL, restore_old_fits=TRUE) {
+        initialize = function(old_fits = NULL) {
             if (file.exists(private$paths$last_backup)) {
                 fits <<- readRDS(private$paths$last_backup)
                 cat('Restore the last backup fits\n')
@@ -117,6 +110,10 @@ eppasm <- R6::R6Class('eppasm', lock_objects=FALSE, portable=FALSE,
                 simmod(update(fp, list=fnCreateParam(par, fp)))
             })
         },
+        #' @details
+        #' show eppasm object nicely, TODO: decide what to show
+        #' @param ... nothing for now
+        #' @return NULL
         print = function(...) {
             cat("EPPASM object\ntype help(eppasm) for details...\n")
         }
