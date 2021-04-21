@@ -67,7 +67,7 @@ prepare_fp_likdat <- function(obj, epp, ...) {
     list(fp=fp, likdat=likdat)
 }
 
-fp_fill_missing <- function(fp) {
+fp_fill_missing <- function(fp) { # this's really annoying
 	# warning('Default values filled, check their validity in fp_fill_missing')
   if (!exists("MODEL", where=fp$ss)) 
     fp$ss$MODEL <- 1
@@ -103,8 +103,6 @@ fp_fill_missing <- function(fp) {
   }
   if (!exists("db_rate", where=fp))
       fp$db_rate <- array(0, c(16, 2, fp$ss$PROJ_YEARS))
-  if (!exists("leading_ev", where=fp))
-      fp$leading_ev <- matrix(0, 66, 2)
   if (!exists("mixmat", where=fp))
       fp$mixmat <- readRDS(system.file("extdata", "est_mixmat.rds", package="eppasm"))[[1]]
   if (!exists("rel_vl", where=fp))
@@ -123,6 +121,16 @@ fp_fill_missing <- function(fp) {
       fp$relsexact_cd4cat <- rep(1, 7)
   if (!exists("stage0_time", where=fp))
       fp$stage0_time <- 2
+  if (!exists("pop_infect_0", where=fp))
+      fp$pop_infect_0 <- array(0, c(fp$ss$pAG, fp$ss$NG))
+  if (!exists("stage0_0", where=fp))
+      fp$stage0_0 <- array(0, c(fp$ss$hAG, fp$ss$NG))
+  if (!exists("stage0_kappa", where=fp))
+      fp$stage0_kappa <- 10
+  if (!exists("stages_0", where=fp))
+      fp$stages_0 <- array(0, c(fp$ss$hDS, fp$ss$hAG, fp$ss$NG))
+  if (!exists("leading_ev", where=fp))
+      fp$leading_ev <- array(0, c(fp$ss$pAG, fp$ss$NG, fp$ss$hDS + 1))
    # rhybrid = 0 # rtrend = 1 # directincid =2
   fp$eppmodInt <- match(fp$eppmod, c("rtrend", "directincid"), nomatch=0) # 0: r-spline;
   fp$ancrtInt <- match(fp$ancrt, c("both"), nomatch=0) # just a placeholder
