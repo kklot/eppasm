@@ -39,6 +39,8 @@ struct NaturalHistoryParam {
   epp::map_of_cube<double> frr_cd4;
   epp::map_of_4D<double> art_mort;
   epp::map_of_4D<double> frr_art;
+  epp::map_of_cube<double> cd4_prog_xp;     // expanded to single-age
+  epp::map_of_cube<double> cd4_initdist_xp; // expanded to single-age
   NaturalHistoryParam(const SEXP& fp) :
     artmx_timerr(REAL(get_value(fp, "artmx_timerr")), get_dim_2D(fp, "artmx_timerr")),
     cd4_initdist(REAL(get_value(fp, "cd4_initdist")), get_dim_3D(fp, "cd4_initdist")),
@@ -46,7 +48,9 @@ struct NaturalHistoryParam {
     cd4_mort    (REAL(get_value(fp, "cd4_mort")), get_dim_3D(fp, "cd4_mort")),
     frr_cd4     (REAL(get_value(fp, "frr_cd4")), get_dim_3D(fp, "frr_cd4")),
     art_mort    (REAL(get_value(fp, "art_mort")), get_dim_4D(fp, "art_mort")),
-    frr_art     (REAL(get_value(fp, "frr_art")), get_dim_4D(fp, "frr_art"))
+    frr_art     (REAL(get_value(fp, "frr_art")), get_dim_4D(fp, "frr_art")),
+    cd4_prog_xp    (REAL(get_value(fp, "cd4_prog_xp")), get_dim_3D(fp, "cd4_prog_xp")),
+    cd4_initdist_xp(REAL(get_value(fp, "cd4_initdist_xp")), get_dim_3D(fp, "cd4_initdist_xp"))
     {}
 };
 
@@ -126,6 +130,7 @@ struct IncidenceParam {
   epp::map_of_matrix<double> pop_infect_0;
   epp::map_of_matrix<double> stage0_0;
   epp::map_of_cube<double> stages_0;
+  const double   stage0_kappa;
   const double   balancing;
   const double   stage0_time;
   const double   relinfectART;
@@ -157,6 +162,7 @@ struct IncidenceParam {
       pop_infect_0  ( REAL(get_value(fp, "pop_infect_0")), get_dim_2D(fp, "pop_infect_0")),
       stage0_0      ( REAL(get_value(fp, "stage0_0")), get_dim_2D(fp, "stage0_0")),
       stages_0      ( REAL(get_value(fp, "stages_0")), get_dim_3D(fp, "stages_0")),
+      stage0_kappa  (*REAL(get_value(fp, "stage0_kappa"))),
       balancing     (*REAL(get_value(fp, "balancing"))),
       stage0_time   (*REAL(get_value(fp, "stage0_time"))),
       relinfectART  (*REAL(get_value(fp, "relinfectART"))),

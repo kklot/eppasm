@@ -132,7 +132,7 @@ create_I0 <- function(p, fp) {
 		scale_stage0 <- 1 / p$rel_vl[1]
 	else # this is default
 		scale_stage0 <- .epp.env$stage0_scale
-	p$leading_ev   <- domimance_vector(fp, scale_stage0, scale=TRUE)
+	p$leading_ev   <- domimance_vector(fp, scale_stage0)
 	p$leading_ev   <- aperm(array(p$leading_ev, c(fp$ss$pAG, fp$ss$hDS + 1, fp$ss$NG)), c(1,3,2)) 
 	n_infect_0     <- fp$iota * sum(fp$basepop) * p$leading_ev
 	# this is used for initialize main pop

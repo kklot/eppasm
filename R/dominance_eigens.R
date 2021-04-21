@@ -66,14 +66,17 @@ getVmat = function(p, sex) {
 #' @param p list of sexual behaviors model's parameters
 #' @param kappa increase of infectiousness in stage 0 vs 1-7
 #' @export 
-domimance_vector = function(p, kappa = 10, scale = TRUE, sum_by_stages){
+domimance_vector = function(p, stage0_kappa = 10, scale = TRUE, version = 'C'){
+  p$stage0_kappa = stage0_kappa
+	if (version == 'C') 
+		return(.Call("domimance_vector_symbol", prepare_fp_for_Cpp(p)))
   N = nrow(p$basepop)
   # F matrix
   F_form = F_scale = Matrix::Matrix(0, 8, 8)
   F_form[1, ] = 1
   F_scale[1,1] = 1
 
-  scale_mat = Matrix::Matrix(kappa, N, N)
+  scale_mat = Matrix::Matrix(stage0_kappa, N, N)
   scales = kronecker(F_scale, scale_mat)
   scales[scales==0] = 1
 
@@ -91,9 +94,9 @@ domimance_vector = function(p, kappa = 10, scale = TRUE, sum_by_stages){
   Vf = getVmat(p, 2)
   VV = kronecker(Matrix::Matrix(c(1,0,0,0), 2), Vm, sparse=T) + 
        kronecker(Matrix::Matrix(c(0,0,0,1), 2), Vf, sparse=T)
-    Jac = FF - VV
-    V0  = abs(power_method(Jac))
+  Jac = FF - VV
+  V0  = power_method(Jac)
   if (scale)
     V0  = V0 / sum(V0)
-  return(V0)
+  V0
 }

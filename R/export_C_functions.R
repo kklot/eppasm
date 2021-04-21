@@ -1,4 +1,4 @@
-#' @useDynLib eppasm eppasmC eppasmOOpp
+#' @useDynLib eppasm eppasmC eppasmOOpp domimance_vector_symbol
 foo <- function() {}
 
 #' Using power method to obtain the dominance eigenvector from infection matrix

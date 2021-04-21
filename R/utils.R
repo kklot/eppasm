@@ -87,6 +87,13 @@ ldinvlogit <- function(x){v <- invlogit(x); log(v) + log(1-v)}
 #' 
 #' @param fp Fix parameters
 prepare_fp_for_Cpp <- function(fp) {
+    # for NGM calculation
+    fp$cd4_prog_xp = abind(
+        fp$cd4_prog[,,1] %>% apply(1, rep, times=fp$ss$h.ag.span),
+        fp$cd4_prog[,,2] %>% apply(1, rep, times=fp$ss$h.ag.span), along = 3) 
+    fp$cd4_initdist_xp = abind(
+        fp$cd4_initdist[,,1] %>% apply(1, rep, times=fp$ss$h.ag.span),
+        fp$cd4_initdist[,,2] %>% apply(1, rep, times=fp$ss$h.ag.span), along = 3)
     names(fp$ss) <- gsub('\\.', '_', names(fp$ss))
     names(fp) <- gsub('\\.', '_', names(fp))
     if (exists("rt", where=fp))
