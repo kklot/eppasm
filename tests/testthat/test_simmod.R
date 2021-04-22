@@ -151,9 +151,12 @@ test_that("Model C and new C++ ouputs are equal", {
 
 
 # UG  = eppasm$new(readRDS('~/Github/uga_paper/fit/uga1988.rds'))
-# update(UG$fits$imis$fp, list=fnCreateParam(UG$fits$imis$par, UG$fits$imis$fp)) %>% saveRDS("../../inst/extdata/ug_fp.rds")
+# update(UG$fits$imis$fp, list=fnCreateParam(UG$fits$imis$par, UG$fits$imis$fp)) %>% 
+# saveRDS("../../inst/extdata/ug_fp.rds")
+# ug$leading_ev <- array(.001, c(66,2,8))
+# saveRDS(ug, "~/Github/eppasm/inst/extdata/ug_fp.rds")
 ug <- readRDS( system.file("extdata", "ug_fp.rds", package="eppasm") )
- 
+
 test_that("Mixing model C++ equal R, no C version", {
   ug$ss$MODEL <- 2L
   ug$ss$MIX   <- TRUE
