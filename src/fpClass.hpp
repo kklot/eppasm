@@ -338,36 +338,3 @@ struct StateSpace {
     hAG_15plus     ((h_age15plus_(0) - 1) + h_age15plus_.size())
     {}
 };
-
-template<typename T>
-struct Views { // two years view of outputs
-  const int         N_pop;
-  const int         N_hiv;
-  const int         N_art;
-  const std::array<long, 3> pop_shape;
-  const std::array<long, 3> hiv_shape;
-  const std::array<long, 4> art_shape;
-  epp::map_of_cube<T> now_pop;
-  epp::map_of_cube<T> now_hiv;
-  epp::map_of_4D<T> now_art;
-  epp::map_of_cube<T> pre_pop; // last year view
-  epp::map_of_cube<T> pre_hiv; // last year view
-  epp::map_of_4D<T> pre_art; // last year view
-  Views(T * pop_start,
-        T * hiv_start,
-        T * art_start,
-        StateSpace* const s, int year = 1) :
-    N_pop     (s->NG * s->pAG * s->pDS),
-    N_hiv     (s->NG * s->hAG * s->hDS),
-    N_art     (s->NG * s->hAG * s->hDS * s->hTS),
-    pop_shape ({ s->pAG, s->NG, s->pDS }),
-    hiv_shape ({         s->hDS, s->hAG, s->NG}),
-    art_shape ({ s->hTS, s->hDS, s->hAG, s->NG}),
-    now_pop   (pop_start + year * N_pop, pop_shape),
-    now_hiv   (hiv_start + year * N_hiv, hiv_shape),
-    now_art   (art_start + year * N_art, art_shape),
-    pre_pop   (pop_start + (year - 1) * N_pop, pop_shape),
-    pre_hiv   (hiv_start + (year - 1) * N_hiv, hiv_shape),
-    pre_art   (art_start + (year - 1) * N_art, art_shape)
-  {}
-};
