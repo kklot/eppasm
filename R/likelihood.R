@@ -144,7 +144,7 @@ create_I0 <- function(p, fp) {
 	n_infect_0     <- aggregate(Freq ~ grp + Var2 + Var3, n_infect_0, sum)
 	n_infect_0     <- array(n_infect_0$Freq, c(fp$ss$hAG, fp$ss$NG, fp$ss$hDS + 1))
 	p$stage0_0     <- n_infect_0[,,1]          # stage zero time zero
-	p$stages_0     <- n_infect_0[,,1 + 1:fp$ss$hDS] # stages 1-7 time zero
+	p$stages_0     <- aperm(n_infect_0[,,1 + 1:fp$ss$hDS], c(3,1,2)) # stages 1-7 time zero
 	p
 }
 
