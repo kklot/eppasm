@@ -314,7 +314,8 @@ fitmod <- function(obj, ..., epp=FALSE, B0 = 1e2, B = 1e3, B.re = 1e3,
   while(inherits(fit, "try-error")){
     start.time <- proc.time()
     fit <- try(imis(B0, B, B.re, number_k, opt_iter, fp=fp, likdat=likdat, last_fit=last_fit,
-                    sample_prior=sample.prior, prior=prior, likelihood=likelihood))
+										sample_prior=sample.prior, prior=prior,
+										likelihood=likelihood, doParallel = doParallel))
     fit.time <- proc.time() - start.time
   }
   fit$fp <- fp

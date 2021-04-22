@@ -44,8 +44,8 @@ simmod.specfp <- function(fp) {
     pop$artpop <- artpop$data
     if (MODEL==2) {
       pop$vpop    <- pop$VIRGIN$data
-      pop$vpopart <- artpop$db_data
-      pop$vpophiv <- hivpop$db_data
+      pop$vpopart <- artpop$data_db
+      pop$vpophiv <- hivpop$data_db
       pop$stage0  <- hivpop$stage0
     }
     class(pop) <- "spec"

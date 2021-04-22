@@ -23,7 +23,7 @@ imis <- function(B0, B, B_re, number_k, opt_k=NULL, fp, likdat,
                  prior=eppasm::prior,
                  likelihood=eppasm::likelihood,
                  sample_prior=eppasm::sample.prior,
-                 dsamp = eppasm::dsamp, save_all=FALSE){
+                 dsamp = eppasm::dsamp, save_all=FALSE, doParallel=TRUE){
 
   ## Draw initial samples from prior distribution
   if (is.null(last_fit)) {
@@ -57,7 +57,7 @@ imis <- function(B0, B, B_re, number_k, opt_k=NULL, fp, likdat,
   for(k in 1:number_k){
 
     ## Calculate log-likelihood for new inputs
-    ll_k <- likelihood(X_k, fp, likdat, log=TRUE, doParallel=1)
+    ll_k <- likelihood(X_k, fp, likdat, log=TRUE, doParallel)
 
     ##  Keep only inputs with non-zero likelihood, calculate importance weights
     which_k <- which(ll_k > -Inf)
