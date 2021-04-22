@@ -19,7 +19,7 @@ infect_mix = function(hivpop, artpop, ii) {
 		
     # calculate and distribute relative infection by CD4 stages
 		N1 <- colSums(artpop$data[,,,,year],,2) + colSums(hivpop$data[,,,year])
-    N2 <- hivpop$stage0[,,year] + (N1 - hivpop$stage0[,,year]) * p$rel_vl[2]
+    N2 <- p$stage0_kappa * hivpop$stage0[,,year] + (N1 - hivpop$stage0[,,year])
 
 		N1 <- sapply(1:2, function(x) rep(N1[, x], h.ag.span)) 
 		N2 <- sapply(1:2, function(x) rep(N2[, x], h.ag.span))

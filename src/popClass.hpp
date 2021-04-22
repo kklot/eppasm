@@ -749,7 +749,7 @@ public: // Pop inits
     
     epp::matrix<T> 
       N1 = hivpop.data_curr.sum(epp::by_rows) + artpop.data_curr.sum(epp::by_bay),
-      N2 = hivpop.stage0.chip(s->year, 2) + (N1 - hivpop.stage0.chip(s->year, 2)) * p->ic.rel_vl[1],
+      N2 = p->ic.stage0_kappa * hivpop.stage0.chip(s->year, 2) + (N1 - hivpop.stage0.chip(s->year, 2)),
       PP = data_active.chip(s->P, 2) / expand_age_group<T>(N1, s->h_ag_span),
       hiv_cd4_adj = PP * expand_age_group<T>(N2, s->h_ag_span);
     replace_na_with(hiv_cd4_adj);
