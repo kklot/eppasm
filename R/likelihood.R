@@ -410,9 +410,7 @@ ll_spline <- function(theta,
 #' 
 #' @importFrom stats aggregate approx cov cov.wt density dexp dlnorm dnorm dunif ecdf mahalanobis median model.matrix na.omit optim optimHess pnorm qnorm quantile relevel rexp rgamma rnorm runif sd setNames update var
 ll_all = function(theta, fp, likdat) {
-
-  .epp.env$theta.last <<- theta
-
+  
   nparam <- length(theta)
   
   fp <- update(fp, keep.attr=FALSE, list=fnCreateParam(theta, fp))
