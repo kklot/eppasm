@@ -30,10 +30,10 @@ epp::VectorX<T> NGM(const Parameters& p, const StateSpace& s)
     Fmf    = epp::kronecker<T>(F_form, Fmf0i)  * scales,
     Vm     = getVmat<T>(p, s.M),
     Vf     = getVmat<T>(p, s.F),
-    FF     = epp::kronecker<T>(epp::matrix_single_entry<T>(4,1,0), Fmf) + 
-             epp::kronecker<T>(epp::matrix_single_entry<T>(4,0,1), Ffm),
-    VV     = epp::kronecker<T>(epp::matrix_single_entry<T>(4,0,0), Vm) + 
-             epp::kronecker<T>(epp::matrix_single_entry<T>(4,1,1), Vf),
+    FF     = epp::kronecker<T>(epp::matrix_single_entry<T>(2,1,0), Fmf) + 
+             epp::kronecker<T>(epp::matrix_single_entry<T>(2,0,1), Ffm),
+    VV     = epp::kronecker<T>(epp::matrix_single_entry<T>(2,0,0), Vm) + 
+             epp::kronecker<T>(epp::matrix_single_entry<T>(2,1,1), Vf),
     Jac    = FF - VV;
   epp::map_of_MatrixX<T> Jac_map(&Jac(0), Jac.dimension(0), Jac.dimension(1));
   epp::VectorX<T> leading_ev = epp::power_method<T>(Jac_map);
