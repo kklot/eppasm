@@ -83,12 +83,11 @@ matrix<T> sweep(const matrix<T>& A,   // col-Major
 }
 // power method
 template<typename T>
-Eigen::Matrix<T, Eigen::Dynamic, 1> 
-power_method(const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>& Jac, 
+VectorX<T> power_method(const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>& Jac, 
              T e = 1e-6, T R0 = 1., int max_iter = 1e3)
 {
   Eigen::SparseMatrix<T> Jac_sparse = Jac.sparseView();
-  Eigen::Matrix<T, Eigen::Dynamic, 1> v(Jac.rows()); 
+  VectorX<T> v(Jac.rows()); 
   v.setRandom();
   T r = R0, u;
   for (int i = 0; i < max_iter; i++) 
