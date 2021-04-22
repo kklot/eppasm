@@ -146,7 +146,8 @@ hivEPP <- R6::R6Class("hivepp", class=F, cloneable=F, portable=F, inherit=eppFP,
                 f_death_db <<- f_death
                 stage0     <<- array(0, c(hAG, NG, PROJ_YEARS))
                 if (exists("leading_ev", fp)) {
-                    data[,,,1]  <<- fp$stages_0
+                    # due to the short live stage 0, this not equivalent to ODEPP
+                    data[,,,1]  <<- fp$stages_0 + sweep(p$cd4_initdist, 2:3, fp$stage0_0, "*")
                     stage0[,,1] <<- fp$stage0_0
                 }
             }
