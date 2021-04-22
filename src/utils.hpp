@@ -9,125 +9,128 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 #pragma once
 
-namespace epp {
-  template<typename T> using scalar  = Eigen::Tensor<T, 0>;
-  template<typename T> using vector  = Eigen::Tensor<T, 1>;
-  template<typename T> using matrix  = Eigen::Tensor<T, 2>;
-  template<typename T> using cube    = Eigen::Tensor<T, 3>;
-  template<typename T> using array4D = Eigen::Tensor<T, 4>;
-  template<typename T> using array5D = Eigen::Tensor<T, 5>;
-  template<size_t x  > using index   = Eigen::array<Eigen::Index, x>;
-  template<size_t x  > using id      = Eigen::array<Eigen::Index, x>;
-  // Mapping
-  template<typename T> using map_of_vector = Eigen::TensorMap<vector<T>>;
-  template<typename T> using map_of_matrix = Eigen::TensorMap<matrix<T>>;
-  template<typename T> using map_of_cube   = Eigen::TensorMap<cube<T>>;
-  template<typename T> using map_of_4D     = Eigen::TensorMap<array4D<T>>;
-  template<typename T> using map_of_5D     = Eigen::TensorMap<array5D<T>>;
-  // use to do linear algebra, define to use with templates, same as eigen's X*
-  template<typename T> using MatrixX = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
-  template<typename T> using VectorX = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-  template<typename T> using map_of_MatrixX = Eigen::Map<MatrixX<T>>;
-  template<typename T> using map_of_VectorX = Eigen::Map<VectorX<T>>;
-  // tensor contractions and manipulations
-  index<1> by_rows({0});
-  index<1> by_cols({1});
-  index<1> by_rack({2});
-  index<2> by_bay({0, 1}); // row and col
-  index<2> transpose({1, 0});
+namespace epp 
+{
+template<typename T> using scalar  = Eigen::Tensor<T, 0>;
+template<typename T> using vector  = Eigen::Tensor<T, 1>;
+template<typename T> using matrix  = Eigen::Tensor<T, 2>;
+template<typename T> using cube    = Eigen::Tensor<T, 3>;
+template<typename T> using array4D = Eigen::Tensor<T, 4>;
+template<typename T> using array5D = Eigen::Tensor<T, 5>;
+template<size_t x  > using index   = Eigen::array<Eigen::Index, x>;
+template<size_t x  > using id      = Eigen::array<Eigen::Index, x>;
+// Mapping
+template<typename T> using map_of_vector = Eigen::TensorMap<vector<T>>;
+template<typename T> using map_of_matrix = Eigen::TensorMap<matrix<T>>;
+template<typename T> using map_of_cube   = Eigen::TensorMap<cube<T>>;
+template<typename T> using map_of_4D     = Eigen::TensorMap<array4D<T>>;
+template<typename T> using map_of_5D     = Eigen::TensorMap<array5D<T>>;
+// use to do linear algebra, define to use with templates, same as eigen's X*
+template<typename T> using MatrixX = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+template<typename T> using VectorX = Eigen::Matrix<T, Eigen::Dynamic, 1>;
+template<typename T> using map_of_MatrixX = Eigen::Map<MatrixX<T>>;
+template<typename T> using map_of_VectorX = Eigen::Map<VectorX<T>>;
+// tensor contractions and manipulations
+index<1> by_rows({0});
+index<1> by_cols({1});
+index<1> by_rack({2});
+index<2> by_bay({0, 1}); // row and col
+index<2> transpose({1, 0});
 
-  // kronecker for tensor matrix
-  template <class T>
-  matrix<T> kronecker(const matrix<T>& x, const matrix<T>& y) 
-  {
-    int n1 = x.dimension(0), n2 = x.dimension(1), 
-        n3 = y.dimension(0), n4 = y.dimension(1);
-    matrix<T> ans(n1 * n3, n2 * n4);
-    ans.setZero();
-    for (int i = 0; i < n1; i++)
-      for (int j = 0; j < n2; j++)
-        for (int k = 0; k < n3; k++)
-          for (int l = 0; l < n4; l++)
-            ans(i*n3+k,j*n4+l) = x(i,j) * y(k,l);
-    return ans;
+// kronecker for tensor matrix
+template <class T>
+matrix<T> kronecker(const matrix<T>& x, const matrix<T>& y) 
+{
+  int n1 = x.dimension(0), n2 = x.dimension(1), 
+      n3 = y.dimension(0), n4 = y.dimension(1);
+  matrix<T> ans(n1 * n3, n2 * n4);
+  ans.setZero();
+  for (int i = 0; i < n1; i++)
+    for (int j = 0; j < n2; j++)
+      for (int k = 0; k < n3; k++)
+        for (int l = 0; l < n4; l++)
+          ans(i*n3+k,j*n4+l) = x(i,j) * y(k,l);
+  return ans;
+}
+
+// replicate sweep in R for tensor matrix
+template<class T>
+matrix<T> sweep(const matrix<T>& A,   // col-Major
+                int direction,        // 0 = row, 1 =  col
+                const vector<T>& b,   // stats
+                const char* op = "*") // +-*/
+{
+  int n_rows = A.dimension(0), n_cols = A.dimension(1), v_len = b.size();
+
+  id<2> output_shape = {n_rows, n_cols}, transpose = {1, n_cols};
+  id<1> expand_dim = {n_rows};
+  matrix<T> b_expand(n_rows, n_cols), output(n_rows, n_cols);
+  if (direction==0) {
+    if (n_rows != v_len) 
+      Rf_error("Vector to sweep and matrix row length different");
+    b_expand = b.broadcast(expand_dim).reshape(output_shape);
   }
-
-  // replicate sweep in R for tensor matrix
-  template<class T>
-  matrix<T> sweep(const matrix<T>& A,   // col-Major
-                  int direction,        // 0 = row, 1 =  col
-                  const vector<T>& b,   // stats
-                  const char* op = "*") // +-*/
+  else if (direction==1) {
+    if (n_cols != v_len)
+      Rf_error("Vector to sweep and matrix column length different");
+    b_expand = b.reshape(transpose).broadcast(id<2>({n_rows, 1})).reshape(output_shape);
+  }
+  if (!strcmp(op, "+")) output = A + b_expand;
+  if (!strcmp(op, "-")) output = A - b_expand;
+  if (!strcmp(op, "*")) output = A * b_expand;
+  if (!strcmp(op, "/")) output = A / b_expand;
+  return output;
+}
+// power method
+template<typename T>
+Eigen::Matrix<T, Eigen::Dynamic, 1> 
+power_method(const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>& Jac, 
+             T e = 1e-6, T R0 = 1., int max_iter = 1e3)
+{
+  Eigen::SparseMatrix<T> Jac_sparse = Jac.sparseView();
+  Eigen::Matrix<T, Eigen::Dynamic, 1> v(Jac.rows()); 
+  v.setRandom();
+  T r = R0, u;
+  for (int i = 0; i < max_iter; i++) 
   {
-    int n_rows = A.dimension(0), n_cols = A.dimension(1), v_len = b.size();
-
-    id<2> output_shape = {n_rows, n_cols}, transpose = {1, n_cols};
-    id<1> expand_dim = {n_rows};
-    matrix<T> b_expand(n_rows, n_cols), output(n_rows, n_cols);
-    if (direction==0) {
-      if (n_rows != v_len) 
-        Rf_error("Vector to sweep and matrix row length different");
-      b_expand = b.broadcast(expand_dim).reshape(output_shape);
+    v = Jac_sparse * v;
+    u = v.norm();
+    v = v / u;
+    if (std::abs( r - u ) > e) {
+      if (i==max_iter)
+        Rf_warning("stop at iter:", max_iter, "with error: ", std::abs(r - u));
+      r = u;
+    } else {
+      break;
     }
-    else if (direction==1) {
-      if (n_cols != v_len)
-        Rf_error("Vector to sweep and matrix column length different");
-      b_expand = b.reshape(transpose).broadcast(id<2>({n_rows, 1})).reshape(output_shape);
-    }
-    if (!strcmp(op, "+")) output = A + b_expand;
-    if (!strcmp(op, "-")) output = A - b_expand;
-    if (!strcmp(op, "*")) output = A * b_expand;
-    if (!strcmp(op, "/")) output = A / b_expand;
-    return output;
   }
-  // power method
-  template<typename T>
-	VectorX<T> power_method(const MatrixX<T>& Jac, T e = 1e-6, T R0 = 1., int max_iter = 1e2)
-  {
-    Eigen::SparseMatrix<T> Jac_sparse = Jac.sparseView();
-    VectorX<T> v(Jac.rows()); 
-    v.setRandom();
-    T r = R0, u;
-    for (int i = 0; i < max_iter; i++) 
-    {
-      v = Jac_sparse * v;
-      u = v.norm();
-      v = v / u;
-      if (std::abs( r - u ) > e) {
-        if (i==max_iter)
-          Rf_warning("stop at iter:", max_iter, "with error: ", std::abs(r - u));
-        r = u;
-      } else {
-        break;
-      }
-    }
-    return v.cwiseAbs();
-  }
-  
-  template<typename T>
-  matrix<T> Diag(T x, int N) // from scalar
-  { 
-    matrix<T> out(N, N); out.setZero();
-    for (int i = 0; i < N; i++) out(i,i) = x;
-    return out;
-  }
+  return v.cwiseAbs();
+}
 
-  template<typename T>
-  matrix<T> Diag(vector<T> x) // from vector
-  {
-    int N  = x.size();
-    matrix<T> out(N, N); out.setZero();
-    for (int i = 0; i < N; i++) out(i,i) = x(i);
-    return out;
-  }
+template<typename T>
+matrix<T> Diag(T x, int N) // from scalar
+{ 
+  matrix<T> out(N, N); out.setZero();
+  for (int i = 0; i < N; i++) out(i,i) = x;
+  return out;
+}
 
-  template<typename T>
-  matrix<T> matrix_single_entry (int N = 8, int row = 0, int col = 0)
-  {
-    matrix<T> out(N, N); out.setZero();
-    out(row, col) = (T) 1;
-    return out;
-  }
+template<typename T>
+matrix<T> Diag(epp::vector<T> x) // from vector
+{
+  int N  = x.size();
+  matrix<T> out(N, N); out.setZero();
+  for (int i = 0; i < N; i++) out(i,i) = x(i);
+  return out;
+}
+
+template<typename T>
+matrix<T> matrix_single_entry (int N = 8, int row = 0, int col = 0)
+{
+  matrix<T> out(N, N); out.setZero();
+  out(row, col) = (T) 1;
+  return out;
+}
 
 } // end epp namespace
 
