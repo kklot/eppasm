@@ -4,13 +4,6 @@ template<typename T> epp::matrix<T> getVmat(const Parameters& p, int sex);
 template<typename T>
 epp::VectorX<T> NGM(const Parameters& p, const StateSpace& s) 
 {
-  epp::matrix<T> M_bottom_left(2, 2), M_top_right(2, 2), 
-                 M_top_left(2, 2), M_bottom_right(2, 2);
-  M_top_left    .setValues({{1., 0.}, {0., 0.}});
-  M_bottom_left .setValues({{0., 0.}, {1., 0.}});
-  M_top_right   .setValues({{0., 1.}, {0., 0.}});
-  M_bottom_right.setValues({{0., 0.}, {0., 1.}});
-
   int N  = p.dm.basepop.dimension(0);
   epp::matrix<T> F_form(8,8), F_scale(8,8);
   F_form.setZero();
@@ -37,10 +30,10 @@ epp::VectorX<T> NGM(const Parameters& p, const StateSpace& s)
     Fmf    = epp::kronecker<T>(F_form, Fmf0i)  * scales,
     Vm     = getVmat<T>(p, s.M),
     Vf     = getVmat<T>(p, s.F),
-    FF     = epp::kronecker<T>(M_bottom_left, Fmf) + 
-             epp::kronecker<T>(M_top_right, Ffm),
-    VV     = epp::kronecker<T>(M_top_left, Vm) + 
-             epp::kronecker<T>(M_bottom_right, Vf),
+    FF     = epp::kronecker<T>(epp::matrix_single_entry<T>(4,1,0), Fmf) + 
+             epp::kronecker<T>(epp::matrix_single_entry<T>(4,0,1), Ffm),
+    VV     = epp::kronecker<T>(epp::matrix_single_entry<T>(4,0,0), Vm) + 
+             epp::kronecker<T>(epp::matrix_single_entry<T>(4,1,1), Vf),
     Jac    = FF - VV;
   epp::map_of_MatrixX<T> Jac_map(&Jac(0), Jac.dimension(0), Jac.dimension(1));
   epp::VectorX<T> leading_ev = epp::power_method<T>(Jac_map);

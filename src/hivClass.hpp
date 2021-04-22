@@ -59,7 +59,7 @@ public: // inits
   void aging(const epp::matrix<T>& ag_prob) 
   {
     data_curr = data_prev;
-    epp::cube<double> nup = data_prev * expand_2to3<double>(ag_prob, s->hDS);
+    epp::cube<T> nup = data_prev * expand_2to3<T>(ag_prob, s->hDS);
     epp::index<3> origin_lo = {0,0,0}, origin_up = {0,1,0},  xtents = {s->hDS, s->hAG-1, s->NG};
     data_curr.slice(origin_lo, xtents)   -= nup.slice(origin_lo, xtents);
     data_curr.slice(origin_up, xtents)   += nup.slice(origin_lo, xtents);

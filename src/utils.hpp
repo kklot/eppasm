@@ -82,12 +82,10 @@ namespace epp {
   }
   // power method
   template<typename T>
-  Eigen::Matrix<T, Eigen::Dynamic, 1> 
-  power_method(const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>& Jac, 
-               T e = 1e-6, T R0 = 1., int max_iter = 1e3)
+	VectorX<T> power_method(const MatrixX<T>& Jac, T e = 1e-6, T R0 = 1., int max_iter = 1e2)
   {
     Eigen::SparseMatrix<T> Jac_sparse = Jac.sparseView();
-    Eigen::Matrix<T, Eigen::Dynamic, 1> v(Jac.rows()); 
+    VectorX<T> v(Jac.rows()); 
     v.setRandom();
     T r = R0, u;
     for (int i = 0; i < max_iter; i++) 
@@ -115,7 +113,7 @@ namespace epp {
   }
 
   template<typename T>
-  matrix<T> Diag(epp::vector<T> x) // from vector
+  matrix<T> Diag(vector<T> x) // from vector
   {
     int N  = x.size();
     matrix<T> out(N, N); out.setZero();
@@ -163,32 +161,32 @@ bool has_value(SEXP list, const char *str) {
   return false;
 }
 
-template<typename Type>
-epp::cube<Type> expand_2to3 (const epp::matrix<Type>& b, const int replicates)
+template<typename T>
+epp::cube<T> expand_2to3 (const epp::matrix<T>& b, const int replicates)
 {
-  epp::index<3> cube_dims = {replicates, b.dimension(0), b.dimension(1)};
-  epp::cube<Type> out = b
-    .reshape(epp::index<2>({1, (int) b.size()})) // transpose
-    .broadcast(epp::index<2>({replicates, 1}))
+  epp::id<3> cube_dims = {replicates, b.dimension(0), b.dimension(1)};
+  epp::cube<T> out = b
+    .reshape(epp::id<2>({1, (int) b.size()})) // transpose
+    .broadcast(epp::id<2>({replicates, 1}))
     .reshape(cube_dims); // replicate columns
   return out; // use for mulitplying tensor e.g. DS X AGE X SEX * AGE x SEX
 }
 
-template<typename Type>
-epp::cube<Type> expand_right_2to3 (const epp::matrix<Type>& b, const int replicates)
+template<typename T>
+epp::cube<T> expand_right_2to3 (const epp::matrix<T>& b, const int replicates)
 {
-  epp::index<3> cube_dims = {b.dimension(0), b.dimension(1), replicates};
-  epp::cube<Type> out = b
-    .reshape(epp::index<1>({(int) b.size()})) // prolong
-    .broadcast(epp::index<1>({replicates}))
+  epp::id<3> cube_dims = {b.dimension(0), b.dimension(1), replicates};
+  epp::cube<T> out = b
+    .reshape(epp::id<1>({(int) b.size()})) // prolong
+    .broadcast(epp::id<1>({replicates}))
     .reshape(cube_dims); // replicate
   return out; // use for mulitplying tensor e.g. AGE X SEX x DS * AGE x SEX
 }
 
-template<typename Type>
-epp::matrix<Type> expand_2to4 (const epp::matrix<Type>& b, const int replicates)
+template<typename T>
+epp::matrix<T> expand_2to4 (const epp::matrix<T>& b, const int replicates)
 {
-  epp::matrix<Type> out = b
+  epp::matrix<T> out = b
     .reshape(Eigen::array<int, 2>({1, (int) b.size()})) // to one long row
     .broadcast(Eigen::array<int, 2>({replicates, 1})); // replicate each
   return out; // use for mulitplying tensor TS X DS X AGE X SEX * AGE x SEX
@@ -337,13 +335,11 @@ void replace_elem_with (K& A, double B = 1, double C = 1) {
     if (*i > B) *i = C;
 }
 
-template<typename Type>
-Eigen::Tensor<Type, 2> sumByAG2D (
-  const Eigen::Tensor<Type, 2>& B, 
-  const Eigen::Tensor<Type, 1>& pace_v, 
-  int new_row) 
+template<typename T>
+epp::matrix<T> sumByAG2D(const epp::matrix<T>& B, const epp::vector<T>& pace_v, 
+                         int new_row)
 {
-  Eigen::Tensor<Type, 2> A(new_row, B.dimension(1));
+  epp::matrix<T> A(new_row, B.dimension(1));
   A.setZero();
   for (int i = 0; i < B.dimension(1); ++i) {
     int r_i = pace_v(0); // first age group
@@ -356,13 +352,11 @@ Eigen::Tensor<Type, 2> sumByAG2D (
   return A;
 }
 
-template<typename Type>
-Eigen::Tensor<Type, 1> sumByAG1D (
-  const Eigen::Tensor<Type, 1>& B, 
-  const Eigen::Tensor<Type, 1>& pace_v, 
-  int new_row)
+template<typename T>
+epp::vector<T> sumByAG1D (const epp::vector<T>& B, const epp::vector<T>& pace_v, 
+                          int new_row)
 {
-  Eigen::Tensor<Type, 1> A(new_row);
+  epp::vector<T> A(new_row);
   A.setZero();
   int r_i = pace_v(0); // first age group
   for (int i = 0; i < B.dimension(0); ++i) {
@@ -373,13 +367,13 @@ Eigen::Tensor<Type, 1> sumByAG1D (
   return A;
 }
 
-template<typename Type>
-Eigen::Tensor<Type, 2> expand_age_group(
-  const Eigen::Tensor<Type, 2>& B, 
-  const Eigen::Tensor<Type, 1>& pace_v) 
+template<typename T>
+epp::matrix<T> expand_age_group(
+  const epp::matrix<T>& B, 
+  const epp::vector<T>& pace_v) 
 {
   int new_row = sumArray(pace_v);
-  Eigen::Tensor<Type, 2> A(new_row, B.dimension(1));
+  epp::matrix<T> A(new_row, B.dimension(1));
   for (int c = 0; c < B.dimension(1); c++) 
   {
     int cusu = 0;
