@@ -66,37 +66,52 @@ getVmat = function(p, sex) {
 #' @param p list of sexual behaviors model's parameters
 #' @param kappa increase of infectiousness in stage 0 vs 1-7
 #' @export 
-domimance_vector = function(p, stage0_kappa = 10, scale = TRUE, version = 'C'){
+domimance_vector = function(p, stage0_kappa = 10, scale = TRUE, full = FALSE, version = 'C'){
   p$stage0_kappa = stage0_kappa
 	if (version == 'C') 
-		return(.Call("domimance_vector_symbol", prepare_fp_for_Cpp(p)))
-  N = nrow(p$basepop)
-  # F matrix
-  F_form = F_scale = Matrix::Matrix(0, 8, 8)
-  F_form[1, ] = 1
-  F_scale[1,1] = 1
-
-  scale_mat = Matrix::Matrix(stage0_kappa, N, N)
-  scales = kronecker(F_scale, scale_mat)
-  scales[scales==0] = 1
-
-  Ffm0i = (p$rvec[1] * p$est_pcr[,1] * sweep(p$mixmat[,,1], 1, p$basepop[, 1], "*")) %>%
-    sweep(2, p$basepop[, 2], "/") %>% as("sparseMatrix")
-  Fmf0i = (p$rvec[1] * p$est_pcr[,2] * sweep(p$mixmat[,,2], 1, p$basepop[, 2], "*")) %>%
-    sweep(2, p$basepop[, 1], "/") %>% as("sparseMatrix")
-
-  Ffm = kronecker(F_form, Ffm0i) * scales
-  Fmf = kronecker(F_form, Fmf0i) * scales
-  FF = kronecker(Matrix::Matrix(c(0,1,0,0), 2), Fmf) + kronecker(Matrix::Matrix(c(0,0,1,0), 2), Ffm)
-
-  # V matrix
-  Vm = getVmat(p, 1)
-  Vf = getVmat(p, 2)
-  VV = kronecker(Matrix::Matrix(c(1,0,0,0), 2), Vm, sparse=T) + 
-       kronecker(Matrix::Matrix(c(0,0,0,1), 2), Vf, sparse=T)
-  Jac = FF - VV
-  V0  = power_method(Jac)
-  if (scale)
-    V0  = V0 / sum(V0)
+  {
+    V0 = .Call("domimance_vector_symbol", prepare_fp_for_Cpp(p)) #  scaled in C
+  }
+  else {
+    N = nrow(p$basepop)
+    # F matrix
+    F_form = F_scale = Matrix::Matrix(0, 8, 8)
+    F_form[1, ] = 1
+    F_scale[1,1] = 1
+  
+    scale_mat = Matrix::Matrix(stage0_kappa, N, N)
+    scales = kronecker(F_scale, scale_mat)
+    scales[scales==0] = 1
+  
+    Ffm0i = (p$rvec[1] * p$est_pcr[,1] * sweep(p$mixmat[,,1], 1, p$basepop[, 1], "*")) %>%
+      sweep(2, p$basepop[, 2], "/") %>% as("sparseMatrix")
+    Fmf0i = (p$rvec[1] * p$est_pcr[,2] * sweep(p$mixmat[,,2], 1, p$basepop[, 2], "*")) %>%
+      sweep(2, p$basepop[, 1], "/") %>% as("sparseMatrix")
+  
+    Ffm = kronecker(F_form, Ffm0i) * scales
+    Fmf = kronecker(F_form, Fmf0i) * scales
+    FF = kronecker(Matrix::Matrix(c(0,1,0,0), 2), Fmf) + kronecker(Matrix::Matrix(c(0,0,1,0), 2), Ffm)
+  
+    # V matrix
+    Vm = getVmat(p, 1)
+    Vf = getVmat(p, 2)
+    VV = kronecker(Matrix::Matrix(c(1,0,0,0), 2), Vm, sparse=T) + 
+         kronecker(Matrix::Matrix(c(0,0,0,1), 2), Vf, sparse=T)
+    Jac = FF - VV
+    if (full) {
+      ei = eigen(Jac)
+      return(list(Jac=Jac, R0 = abs(Re(ei$values[1])), V0 = abs(Re(ei$vectors[,1]))))
+    }  
+    V0  = power_method(Jac)
+    if (scale)
+      V0  = V0 / sum(V0)
+  }
+  # reshape to model dimensions
+  V0  <- aperm(array(V0, c(p$ss$pAG, p$ss$hDS + 1, p$ss$NG)), c(1,3,2))
+  # with approxmation there are artifacts in the last ages from power_method, to
+  # remove it the error need to reduce to somewhere like 1e-12 and cost time 
+  # while the general shape of the vector is not different, so set to zero here
+  V0[a2i(70:80),,] = 0 # age x sex x (ds + 1)
   V0
+
 }

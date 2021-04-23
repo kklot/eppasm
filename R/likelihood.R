@@ -133,11 +133,10 @@ create_I0 <- function(p, fp) {
 	else # this is default
 		scale_stage0 <- .epp.env$stage0_scale
 	p$leading_ev   <- domimance_vector(fp, scale_stage0)
-	p$leading_ev   <- aperm(array(p$leading_ev, c(fp$ss$pAG, fp$ss$hDS + 1, fp$ss$NG)), c(1,3,2)) 
 	n_infect_0     <- fp$iota * sum(fp$basepop) * p$leading_ev
 	# this is used for initialize main pop
-	p$pop_infect_0 <- rowSums(n_infect_0, dims = 2)
-	# this is used for initialize hivpop
+	p$pop_infect_0 <- rowSums(n_infect_0, dims = 2) # over all stages
+	# this is used for initialize hivpop: sum by age-group
 	dimnames(n_infect_0) <- list(1:fp$ss$pAG, 1:fp$ss$NG, 1:(fp$ss$hDS + 1))
 	n_infect_0     <- as.data.frame.table(n_infect_0)
 	n_infect_0$grp <- findInterval(14+as.double(n_infect_0$Var1), 14 + fp$ss$agfirst.idx)
