@@ -1,3 +1,16 @@
+#' Generate single entry matrix
+#' 
+#' 
+#' @param N dimension
+#' @param row row position of single entry
+#' @param col col position of single entry
+#' @export
+single_entry <- function(N, row, col) {
+  ans = Matrix::Matrix(0, N, N)
+  ans[row, col] = 1
+  ans
+}
+
 #' Obtain "V" matrix for the NGM
 #' 
 #' @param p model parameters (fp)
@@ -44,19 +57,19 @@ getVmat = function(p, sex) {
   diags = list(V00, V11, V22, V33, V44, V55, V66, V77)
 
   Matrix::.bdiag(diags) +
-    kronecker(Matrix::Matrix(c(rep(0,1), 1, rep(0,8*8-1-1)), 8), V10) +
-    kronecker(Matrix::Matrix(c(rep(0,2), 1, rep(0,8*8-1-2)), 8), V20) +
-    kronecker(Matrix::Matrix(c(rep(0,3), 1, rep(0,8*8-1-3)), 8), V30) +
-    kronecker(Matrix::Matrix(c(rep(0,4), 1, rep(0,8*8-1-4)), 8), V40) +
-    kronecker(Matrix::Matrix(c(rep(0,5), 1, rep(0,8*8-1-5)), 8), V50) +
-    kronecker(Matrix::Matrix(c(rep(0,6), 1, rep(0,8*8-1-6)), 8), V60) +
-    kronecker(Matrix::Matrix(c(rep(0,7), 1, rep(0,8*8-1-7)), 8), V70) +
-    kronecker(Matrix::Matrix(c(rep(0,8*1 + 2 + 0), 1, rep(0,8*8 - 1 - 8*1 - 2 - 0)), 8), V21) +
-    kronecker(Matrix::Matrix(c(rep(0,8*2 + 2 + 1), 1, rep(0,8*8 - 1 - 8*2 - 2 - 1)), 8), V32) +
-    kronecker(Matrix::Matrix(c(rep(0,8*3 + 2 + 2), 1, rep(0,8*8 - 1 - 8*3 - 2 - 2)), 8), V43) +
-    kronecker(Matrix::Matrix(c(rep(0,8*4 + 2 + 3), 1, rep(0,8*8 - 1 - 8*4 - 2 - 3)), 8), V54) +
-    kronecker(Matrix::Matrix(c(rep(0,8*5 + 2 + 4), 1, rep(0,8*8 - 1 - 8*5 - 2 - 4)), 8), V65) +
-    kronecker(Matrix::Matrix(c(rep(0,8*6 + 2 + 5), 1, rep(0,8*8 - 1 - 8*6 - 2 - 5)), 8), V76) 
+    kronecker(single_entry(8, 1+1, 0+1), V10) +
+    kronecker(single_entry(8, 2+1, 0+1), V20) +
+    kronecker(single_entry(8, 3+1, 0+1), V30) +
+    kronecker(single_entry(8, 4+1, 0+1), V40) +
+    kronecker(single_entry(8, 5+1, 0+1), V50) +
+    kronecker(single_entry(8, 6+1, 0+1), V60) +
+    kronecker(single_entry(8, 7+1, 0+1), V70) +
+    kronecker(single_entry(8, 2+1, 1+1), V21) +
+    kronecker(single_entry(8, 3+1, 2+1), V32) +
+    kronecker(single_entry(8, 4+1, 3+1), V43) +
+    kronecker(single_entry(8, 5+1, 4+1), V54) +
+    kronecker(single_entry(8, 6+1, 5+1), V65) +
+    kronecker(single_entry(8, 7+1, 6+1), V76) 
 }
 
 #' Next generation matrix for the sexual mixing model
