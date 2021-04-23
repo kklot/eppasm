@@ -103,13 +103,15 @@ domimance_vector = function(p, stage0_kappa = 10, scale = TRUE, full = FALSE, ve
   
     Ffm = kronecker(F_form, Ffm0i) * scales
     Fmf = kronecker(F_form, Fmf0i) * scales
-    FF = kronecker(Matrix::Matrix(c(0,1,0,0), 2), Fmf) + kronecker(Matrix::Matrix(c(0,0,1,0), 2), Ffm)
+
+    FF = kronecker(single_entry(2,2,1), Fmf) +
+         kronecker(single_entry(2,1,2), Ffm)
   
     # V matrix
     Vm = getVmat(p, 1)
     Vf = getVmat(p, 2)
-    VV = kronecker(Matrix::Matrix(c(1,0,0,0), 2), Vm, sparse=T) + 
-         kronecker(Matrix::Matrix(c(0,0,0,1), 2), Vf, sparse=T)
+    VV = kronecker(single_entry(2, 1, 1), Vm) + 
+         kronecker(single_entry(2, 2, 2), Vf)
     Jac = FF - VV
     if (full) {
       ei = eigen(Jac)
