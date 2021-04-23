@@ -1,3 +1,15 @@
+#' @importFrom magrittr %>%
+#' @export
+magrittr::`%>%`
+
+#' @importFrom magrittr %$%
+#' @export
+magrittr::`%$%`
+
+#' @importFrom magrittr %<>%
+#' @export
+magrittr::`%<>%`
+
 #' Recursively convert list embeded to numeric
 #' 
 #' Recursively convert list embeded to numeric
