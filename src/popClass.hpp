@@ -215,7 +215,7 @@ public: // Pop inits
     // calculate survival prob for hivpop and artpop
     auto death_by_agrp_ = sumByAG2D<T>(num_death_.chip(s->P, 2), s->ag_, s->hAG);
     hiv_sx_prob    = 1 - death_by_agrp_ / hiv_by_agrp_;
-    replace_na_with(hiv_sx_prob);
+    hiv_sx_prob = hiv_sx_prob.isfinite().select(hiv_sx_prob, hiv_sx_prob.constant(0.0));
     //  save natural death outputs
     natdeaths.chip(s->year, 2) = num_death_.sum(epp::by_rack); // over DS
   }
@@ -228,7 +228,7 @@ public: // Pop inits
       migrant_by_agrp_ = sumByAG2D<T>(num_migrate_, s->ag_, s->hAG), 
       hiv_by_agrp_     = sumByAG2D<T>(data_curr.chip(s->P, 2), s->ag_, s->hAG);
     hiv_mr_prob      = migrant_by_agrp_ / hiv_by_agrp_;
-    replace_na_with(hiv_mr_prob);
+    hiv_mr_prob = hiv_mr_prob.isfinite().select(hiv_mr_prob, hiv_mr_prob.constant(0.));
     data_curr *= expand_right_2to3(migrate_prob_, s->pDS);
     if (s->MODEL == 2) {
       epp::index<2> db_start = {0,0}, db_xtend = {s->pDB, s->NG};
@@ -271,7 +271,7 @@ public: // Pop inits
         num_adjust_by_agrp_ = sumByAG2D<T>(num_adjust_, s->ag_, s->hAG), 
         hiv_by_agrp_        = sumByAG2D<T>(data_curr.chip(s->P, 2), s->ag_, s->hAG);
       adj_prob            = num_adjust_by_agrp_ / hiv_by_agrp_;
-      replace_na_with(adj_prob);
+      adj_prob = adj_prob.isfinite().select(adj_prob, adj_prob.constant(0.));
     }
     // only then adjust myself
     epp::cube<T> adjxp = expand_right_2to3<T>(popadjust.chip(s->year, 2), s->pDS);
@@ -395,7 +395,7 @@ public: // Pop inits
       hiv_by_agrp_   = sumByAG2D<T>(data_curr.chip(s->P, 2), s->ag_, s->hAG),
       hiv_mx_agr = death_by_agrp_ / hiv_by_agrp_,
       hiv_mx_age = expand_age_group<T>(hiv_mx_agr, s->h_ag_span);
-    replace_na_with(hiv_mx_age);
+    hiv_mx_age = hiv_mx_age.isfinite().select(hiv_mx_age, hiv_mx_age.constant(0.));
 
     hivdeaths.chip(s->year, 2) += data_curr.chip(s->P, 2) * hiv_mx_age;
     data_curr.chip(s->P, 2)    *= (1 - hiv_mx_age);
@@ -500,9 +500,9 @@ public: // Pop inits
     artpop.update_current_on_art();
     art_initiate(artpop.art_by_sex_, time_step); // update n_art_ii_
     auto n_afford = n_art_ii_ - artpop.art_by_sex_;
-    n_art_init_ = (n_afford > 0.0).select(n_afford, n_afford.constant(0));
+    n_art_init_ = (n_afford > 0.0).select(n_afford, n_afford.constant(0.));
     art_distribute(n_art_init_); // update art_init_ as well
-    replace_na_with(art_init_);
+    art_init_ = art_init_.isfinite().select(art_init_, art_init_.constant(0.));
     if (s->MODEL == 1) {
       epp::cube<T> hiv_grad_dt = hivpop.data_curr + hivpop.grad * s->DT;
       art_init_ = (art_init_ < hiv_grad_dt).select(art_init_, hiv_grad_dt);
@@ -752,7 +752,7 @@ public: // Pop inits
       N2 = p->ic.stage0_kappa * hivpop.stage0.chip(s->year, 2) + (N1 - hivpop.stage0.chip(s->year, 2)),
       PP = data_active.chip(s->P, 2) / expand_age_group<T>(N1, s->h_ag_span),
       hiv_cd4_adj = PP * expand_age_group<T>(N2, s->h_ag_span);
-    replace_na_with(hiv_cd4_adj);
+    hiv_cd4_adj = hiv_cd4_adj.isfinite().select(hiv_cd4_adj, hiv_cd4_adj.constant(0.));
     
     epp::index<1> ages = {s->pAG}, agexsex = {s->pAG * s->NG};
     data_active *= p->ic.est_senesence.reshape(agexsex).broadcast(ages);

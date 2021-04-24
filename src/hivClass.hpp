@@ -138,7 +138,7 @@ public: // inits
       den += artpop.data_db.chip(s->year, 4).sum(over_row);
     }
     num /= (num + den);
-    replace_na_with(num, 1.);
+    num = num.isfinite().select(num, num.constant(1.));
     cd4_mort_ = num * p->nh.cd4_mort;
   }
 
@@ -171,7 +171,7 @@ public: // inits
     epp::cube<T> 
       pr_weight_db = debut_now / all_hivpop, // this can be NaN
       n_artinit_db = artinit * pr_weight_db;
-      replace_na_with(n_artinit_db);
+      n_artinit_db = n_artinit_db.isfinite().select(n_artinit_db, n_artinit_db.constant(0.));
     artinit -= n_artinit_db;
     grad_db -= n_artinit_db / n_artinit_db.constant(s->DT);
     artpop.grad_db_init(n_artinit_db, s);
