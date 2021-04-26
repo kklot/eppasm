@@ -370,9 +370,9 @@ public: // Pop inits
   }
 
   void update_infection () {
-    epp::matrix<T> infection_ts = infections_ * infections_.constant(s->DT);
-    data_curr.chip(s->N, 2) -= infection_ts;
-    data_curr.chip(s->P, 2) += infection_ts;
+    epp::matrix<T> infection_ts  = infections_ * infections_.constant(s->DT);
+    data_curr.chip(s->N, 2)     -= infection_ts;
+    data_curr.chip(s->P, 2)     += infection_ts;
     infections.chip(s->year, 2) += infection_ts;
     epp::index<2> origin = {int(s->p_age15to49_(0) - 1), 0}, 
                   xtents = {int(s->pAG_1549 - (s->p_age15to49_(0) - 1)), s->NG};
@@ -390,11 +390,10 @@ public: // Pop inits
       artD_as += artpop.death_db_.sum(epp::by_bay);
     }
 
-    epp::matrix<T> 
-      death_by_agrp_ = (hivD_as + artD_as) * s->DT,
-      hiv_by_agrp_   = sumByAG2D<T>(data_curr.chip(s->P, 2), s->ag_, s->hAG),
-      hiv_mx_agr = death_by_agrp_ / hiv_by_agrp_,
-      hiv_mx_age = expand_age_group<T>(hiv_mx_agr, s->h_ag_span);
+    auto death_by_agrp_ = (hivD_as + artD_as) * s->DT;
+    auto hiv_by_agrp_   = sumByAG2D<T>(data_curr.chip(s->P, 2), s->ag_, s->hAG);
+    auto hiv_mx_agr = death_by_agrp_ / hiv_by_agrp_;
+    epp::matrix<T> hiv_mx_age = expand_age_group<T>(hiv_mx_agr, s->h_ag_span);
     hiv_mx_age = hiv_mx_age.isfinite().select(hiv_mx_age, hiv_mx_age.constant(0.));
 
     hivdeaths.chip(s->year, 2) += data_curr.chip(s->P, 2) * hiv_mx_age;
@@ -419,8 +418,12 @@ public: // Pop inits
       female_neg = data_active.chip(s->N, 2).chip(s->F, 1).slice(start, length),
       hivn       = sumByAG1D<T>(female_neg, sub_id, s->hAG_FERT);
 
-    epp::cube<T> _art = artpop.data_curr.chip(s->F, 3).slice(epp::index<3>({0,0,0}), epp::index<3>({s->hTS, s->hDS, s->hAG_FERT})) * p->nh.frr_art.chip(s->year, 3);
-    epp::matrix<T> _hiv = hivpop.data_curr.chip(s->F, 2).slice(epp::index<2>({0,0}), epp::index<2>({s->hDS,s->hAG_FERT})) * p->nh.frr_cd4.chip(s->year, 2);
+    epp::cube<T> _art = artpop.data_curr.chip(s->F, 3)
+      .slice(epp::index<3>({0,0,0}), epp::index<3>({s->hTS, s->hDS, s->hAG_FERT})) * 
+        p->nh.frr_art.chip(s->year, 3);
+    epp::matrix<T> _hiv = hivpop.data_curr.chip(s->F, 2)
+      .slice(epp::index<2>({0,0}), epp::index<2>({s->hDS,s->hAG_FERT})) * 
+        p->nh.frr_cd4.chip(s->year, 2);
     epp::vector<T> all_art = _art.sum(epp::by_bay) + _hiv.sum(epp::by_rows);
 
     for (int agr = h_lo; agr < s->hAG_FERT; agr++)
@@ -705,10 +708,8 @@ public: // Pop inits
     }
     
     // Prob of contacting a sexual active, H+ in total pop
-    double
-    transm_prev = (hivp_active - art_ii * (1 - p->ic.relinfectART)) / 
-                  (hivn_both + hivp_active + hivp_inactive);
-
+    double transm_prev = (hivp_active - art_ii * (1 - p->ic.relinfectART)) / 
+           (hivn_both + hivp_active + hivp_inactive);
     double w = (p->ic.proj_steps[ts] == p->ic.tsEpidemicStart) ? p->ic.iota : 0.0;
     double inc_rate = rvec(ts) * transm_prev + w;
 

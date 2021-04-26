@@ -166,8 +166,7 @@ public: // inits
     epp::cube<T> 
       debut_now = data_db.chip(s->year, 3) + grad_db * grad_db.constant(s->DT),
       all_hivpop = data_curr + grad * grad.constant(s->DT) + debut_now;
-    epp::cube<bool> ifs = artinit > all_hivpop;
-      artinit = ifs.select(all_hivpop, artinit);
+      artinit = (artinit > all_hivpop).select(all_hivpop, artinit);
     epp::cube<T> 
       pr_weight_db = debut_now / all_hivpop, // this can be NaN
       n_artinit_db = artinit * pr_weight_db;
