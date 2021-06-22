@@ -99,8 +99,8 @@ fnCreateParam <- function(theta, fp){
   if (fp$ss$MODEL == 2) 
   {
     if (exists("fitpcr", fp) && fp$fitpcr==TRUE) {
-      fitpcr.id <- nparam + 1:8
-      nparam <- nparam + 8
+      fitpcr.id <- nparam + 1:(66*2)
+      nparam <- nparam + 66*2
       param$est_pcr <- sexual_rate(theta[fitpcr.id])
     } else
       param$est_pcr <- fp$est_pcr
@@ -352,8 +352,8 @@ lprior <- function(theta, fp){
   }
 
   if(exists("fitpcr", where=fp)){
-    fitpcr.id <- nparam + 1:8
-    nparam <- nparam + 8
+    fitpcr.id <- nparam + 1:(66*2)
+    nparam <- nparam + 66*2
     lpr <- lpr + sexual_rate_prior(theta[fitpcr.id], fp)
   }
 
@@ -513,8 +513,8 @@ sample.prior <- function(n, fp){
   }
   
   if(exists("fitpcr", where=fp)) {
-    fitpcr.id <- nparam + 1:8
-    nparam <- nparam + 8
+    fitpcr.id <- nparam + 1:(66*2)
+    nparam <- nparam + 66*2
   }
 
   if(exists("fitbalance", where=fp)) {
@@ -642,8 +642,8 @@ ldsamp <- function(theta, fp){
   }
   
   if(exists("fitpcr", where=fp)){
-    fitpcr.id <- nparam + 1:8
-    nparam <- nparam + 8
+    fitpcr.id <- nparam + 1:(66*2)
+    nparam <- nparam + 66*2
     lpr <- lpr + sexual_rate_prior(theta[fitpcr.id], fp)
   }
 
