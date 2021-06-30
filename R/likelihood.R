@@ -85,7 +85,7 @@ fnCreateParam <- function(theta, fp){
     param$frr_art <- fp$frr_art * exp(param$log_frr_adjust)
   }
 
-  if(exists("fitincrr", where=fp) && fp$fitincrr==TRUE){
+  if(exists("fitincrr", where=fp) && fp$fitincrr!=FALSE){
     fitincrr.id <- nparam + 1:getnparam_incrr(fp)
     nparam <- nparam + getnparam_incrr(fp)
     param  <- transf_incrr(theta[fitincrr.id], param, fp)
@@ -345,7 +345,7 @@ lprior <- function(theta, fp){
     lpr <- lpr + lprior_ancmod(theta[ancmod.id], fp$ancmod, fp$prior_args)
   }
 
-  if(exists("fitincrr", where=fp) && fp$fitincrr==TRUE){
+  if(exists("fitincrr", where=fp) && fp$fitincrr!=FALSE){
     fitincrr.id  <- nparam + 1:getnparam_incrr(fp)
     nparam <- nparam + getnparam_incrr(fp)
     lpr <- lpr + lprior_incrr(theta[fitincrr.id], fp)
@@ -507,7 +507,7 @@ sample.prior <- function(n, fp){
     nparam <- nparam + fp$ancmod$nparam
   }
 
-  if(exists("fitincrr", where=fp) && fp$fitincrr==TRUE) {
+  if(exists("fitincrr", where=fp) && fp$fitincrr!=FALSE) {
     fitincrr.id <- nparam + 1:getnparam_incrr(fp)
     nparam <- nparam + getnparam_incrr(fp)
   }
@@ -568,7 +568,7 @@ sample.prior <- function(n, fp){
   if (exists("ancmod", fp) && fp$ancmod$nparam > 0)
     mat[ , ancmod.id] <- sample_prior_ancmod(n, fp$ancmod, fp$prior_args)
 
-  if(exists("fitincrr", where=fp) && fp$fitincrr==TRUE)
+  if(exists("fitincrr", where=fp) && fp$fitincrr!=FALSE)
     mat[, fitincrr.id] <- sample_incrr(n, fp)
   
   if (exists("fitpcr", fp))
@@ -635,10 +635,10 @@ ldsamp <- function(theta, fp){
     lpr <- lpr + lprior_ancmod(theta_anc, fp$ancmod, fp$prior_args)
   }
 
-  if(exists("fitincrr", where=fp) && fp$fitincrr==TRUE){
+  if(exists("fitincrr", where=fp) && fp$fitincrr!=FALSE){
     fitincrr.id <- nparam + 1:getnparam_incrr(fp)
     nparam <- nparam + getnparam_incrr(fp)
-    lpr <- lpr + lprior_incrr(theta[cols], fp)
+    lpr <- lpr + lprior_incrr(theta[fitincrr.id], fp)
   }
   
   if(exists("fitpcr", where=fp)){

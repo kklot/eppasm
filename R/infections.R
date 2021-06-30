@@ -38,9 +38,9 @@ infect_mix = function(hivpop, artpop, ii) {
 		# the balancing ratio
     ratio_mf <- nc_m_total / t(nc_f_total)
     # adjusted number of partnerships
-    nc_m_adj <- nc_m * ratio_mf^(-1 + p$balancing)
-    nc_f_adj <- nc_f * t(ratio_mf)^p$balancing
-    # adjusted number of partnerships
+    nc_m_adj <- nc_m_total * ratio_mf^(-1 + p$balancing)
+    nc_f_adj <- nc_f_total * t(ratio_mf)^p$balancing
+    # shares of adjusted number of partnerships in HIV negative pop
     nc_m_adj <- sweepx(nc_m_adj, 1, data_active[,m.idx,hivn.idx]/rowSums(data_active[,m.idx,]))
     nc_f_adj <- sweepx(nc_f_adj, 1, data_active[,f.idx,hivn.idx]/rowSums(data_active[,f.idx,]))
 		# at this point we have the number of partnerships in each age combinations

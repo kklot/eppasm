@@ -769,9 +769,9 @@ public: // Pop inits
       nc_f_total = nc_f * p_activ.chip(s->F, 1).broadcast(ages),
       /* balancing ratio */
       ratio_mf = nc_m_total / nc_f_total.shuffle(epp::transpose),
-      nc_m_adj = nc_m * ratio_mf.pow(p->ic.balancing - 1),
-      nc_f_adj = nc_f * ratio_mf.shuffle(epp::transpose).pow(p->ic.balancing),
-      /* on negative only  */
+      nc_m_adj = nc_m_total * ratio_mf.pow(p->ic.balancing - 1),
+      nc_f_adj = nc_f_total * ratio_mf.shuffle(epp::transpose).pow(p->ic.balancing),
+      /* shares of pns on negative only  */
       neg_prop = data_active.chip(s->N, 2) / p_activ;
 
     nc_m_adj *= (neg_prop.chip(s->M, 1).broadcast(ages));
